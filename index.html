@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyber Login Monitor</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b1020;
+      color: #fff;
+    }
+
+    .container {
+      width: 92%;
+      max-width: 1000px;
+      margin: 40px auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    header h1 {
+      color: #00e5ff;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      color: #aab3c5;
+    }
+
+    .card {
+      background: #151c32;
+      border: 1px solid #293451;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 220px;
+      resize: vertical;
+      background: #080d19;
+      color: #fff;
+      border: 1px solid #34415f;
+      border-radius: 10px;
+      padding: 15px;
+      font-family: monospace;
+      direction: ltr;
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 12px 22px;
+      border: 0;
+      border-radius: 8px;
+      background: #00bcd4;
+      color: #001018;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.85;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+
+    .stat {
+      background: #0d1427;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .stat h2 {
+      margin: 5px 0;
+      color: #00e5ff;
+    }
+
+    .warning {
+      color: #ffcc00;
+    }
+
+    .danger {
+      color: #ff5252;
+    }
+
+    .safe {
+      color: #52e88b;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #293451;
+      text-align: center;
+    }
+
+    th {
+      color: #00e5ff;
+    }
+
+    .badge {
+      padding: 5px 9px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .badge-danger {
+      background: #5d2027;
+      color: #ff8080;
+    }
+
+    .badge-safe {
+      background: #16452d;
+      color: #6df0a2;
+    }
+
+    @media (max-width: 700px) {
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      table {
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <header>
+    <h1>🛡️ Cyber Login Monitor</h1>
+    <p>نظام تجريبي لتحليل محاولات تسجيل الدخول واكتشاف الأنماط المشبوهة</p>
+  </header>
+
+  <div class="card">
+
+    <h2>📄 سجل تسجيل الدخول</h2>
+
+    <p>
+      أدخل بيانات تجريبية بهذا الشكل:
+      <br>
+      <code>2026-09-18 10:00 | 192.168.1.10 | FAILED</code>
+    </p>
+
+    <textarea id="logInput">2026-09-18 10:00 | 192.168.1.10 | FAILED
+2026-09-18 10:01 | 192.168.1.10 | FAILED
+2026-09-18 10:02 | 192.168.1.10 | FAILED
+2026-09-18 10:03 | 192.168.1.10 | FAILED
+2026-09-18 10:04 | 192.168.1.10 | SUCCESS
+2026-09-18 11:00 | 192.168.1.20 | SUCCESS
+2026-09-18 11:30 | 192.168
+
