@@ -1,176 +1,298 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cyber Login Monitor</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cyber Link Analyzer</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<style>
+* {
+  box-sizing: border-box;
+}
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #0b1020;
-      color: #fff;
-    }
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0b1020;
+  color: white;
+}
 
-    .container {
-      width: 92%;
-      max-width: 1000px;
-      margin: 40px auto;
-    }
+.container {
+  width: 92%;
+  max-width: 850px;
+  margin: 40px auto;
+}
 
-    header {
-      text-align: center;
-      margin-bottom: 30px;
-    }
+header {
+  text-align: center;
+  margin-bottom: 25px;
+}
 
-    header h1 {
-      color: #00e5ff;
-      margin-bottom: 8px;
-    }
+h1 {
+  color: #00e5ff;
+}
 
-    header p {
-      color: #aab3c5;
-    }
+.subtitle {
+  color: #aeb8cc;
+}
 
-    .card {
-      background: #151c32;
-      border: 1px solid #293451;
-      border-radius: 15px;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
+.card {
+  background: #151d33;
+  border: 1px solid #2c3854;
+  border-radius: 16px;
+  padding: 22px;
+  margin-bottom: 20px;
+}
 
-    textarea {
-      width: 100%;
-      min-height: 220px;
-      resize: vertical;
-      background: #080d19;
-      color: #fff;
-      border: 1px solid #34415f;
-      border-radius: 10px;
-      padding: 15px;
-      font-family: monospace;
-      direction: ltr;
-    }
+input {
+  width: 100%;
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid #394765;
+  background: #080d18;
+  color: white;
+  font-size: 16px;
+  direction: ltr;
+}
 
-    button {
-      margin-top: 15px;
-      padding: 12px 22px;
-      border: 0;
-      border-radius: 8px;
-      background: #00bcd4;
-      color: #001018;
-      font-weight: bold;
-      cursor: pointer;
-    }
+button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 15px;
+  border: none;
+  border-radius: 10px;
+  background: #00bcd4;
+  color: #001018;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
 
-    button:hover {
-      opacity: 0.85;
-    }
+button:hover {
+  opacity: .85;
+}
 
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 15px;
-    }
+.result {
+  text-align: center;
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 20px;
+}
 
-    .stat {
-      background: #0d1427;
-      padding: 20px;
-      border-radius: 10px;
-      text-align: center;
-    }
+.safe {
+  background: #123c2a;
+  border: 1px solid #2ecc71;
+}
 
-    .stat h2 {
-      margin: 5px 0;
-      color: #00e5ff;
-    }
+.warning {
+  background: #493c0d;
+  border: 1px solid #f1c40f;
+}
 
-    .warning {
-      color: #ffcc00;
-    }
+.danger {
+  background: #4a1820;
+  border: 1px solid #ff5252;
+}
 
-    .danger {
-      color: #ff5252;
-    }
+.score {
+  font-size: 42px;
+  font-weight: bold;
+}
 
-    .safe {
-      color: #52e88b;
-    }
+ul {
+  line-height: 2;
+}
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
+li {
+  margin-bottom: 5px;
+}
 
-    th, td {
-      padding: 12px;
-      border-bottom: 1px solid #293451;
-      text-align: center;
-    }
+.info {
+  color: #aeb8cc;
+  font-size: 14px;
+}
 
-    th {
-      color: #00e5ff;
-    }
-
-    .badge {
-      padding: 5px 9px;
-      border-radius: 6px;
-      font-size: 13px;
-    }
-
-    .badge-danger {
-      background: #5d2027;
-      color: #ff8080;
-    }
-
-    .badge-safe {
-      background: #16452d;
-      color: #6df0a2;
-    }
-
-    @media (max-width: 700px) {
-      .stats {
-        grid-template-columns: 1fr;
-      }
-
-      table {
-        font-size: 12px;
-      }
-    }
-  </style>
+code {
+  direction: ltr;
+  display: inline-block;
+}
+</style>
 </head>
 
 <body>
 
 <div class="container">
 
-  <header>
-    <h1>🛡️ Cyber Login Monitor</h1>
-    <p>نظام تجريبي لتحليل محاولات تسجيل الدخول واكتشاف الأنماط المشبوهة</p>
-  </header>
+<header>
+  <h1>🛡️ Cyber Link Analyzer</h1>
+  <p class="subtitle">
+    أداة تعليمية لتحليل الروابط واكتشاف بعض المؤشرات المشبوهة
+  </p>
+</header>
 
-  <div class="card">
+<div class="card">
 
-    <h2>📄 سجل تسجيل الدخول</h2>
+  <h2>🔎 تحليل رابط</h2>
 
-    <p>
-      أدخل بيانات تجريبية بهذا الشكل:
-      <br>
-      <code>2026-09-18 10:00 | 192.168.1.10 | FAILED</code>
-    </p>
+  <p class="info">
+    أدخل الرابط هنا. الأداة لا تفتح الرابط، وإنما تحلل شكله فقط.
+  </p>
 
-    <textarea id="logInput">2026-09-18 10:00 | 192.168.1.10 | FAILED
-2026-09-18 10:01 | 192.168.1.10 | FAILED
-2026-09-18 10:02 | 192.168.1.10 | FAILED
-2026-09-18 10:03 | 192.168.1.10 | FAILED
-2026-09-18 10:04 | 192.168.1.10 | SUCCESS
-2026-09-18 11:00 | 192.168.1.20 | SUCCESS
-2026-09-18 11:30 | 192.168
+  <input
+    id="urlInput"
+    type="text"
+    placeholder="https://example.com/login"
+  >
 
+  <button onclick="analyzeURL()">
+    🔍 تحليل الرابط
+  </button>
+
+  <div id="result"></div>
+
+</div>
+
+<div class="card">
+
+  <h2>📋 المؤشرات المكتشفة</h2>
+
+  <ul id="details">
+    <li>لم يتم تحليل أي رابط بعد.</li>
+  </ul>
+
+</div>
+
+</div>
+
+<script>
+
+function analyzeURL() {
+
+  const input = document.getElementById("urlInput").value.trim();
+  const result = document.getElementById("result");
+  const details = document.getElementById("details");
+
+  result.innerHTML = "";
+  details.innerHTML = "";
+
+  if (!input) {
+
+    result.className = "result danger";
+    result.innerHTML = `
+      <h2>⚠️ لم تدخل رابطًا</h2>
+    `;
+
+    return;
+  }
+
+  let url;
+
+  try {
+
+    url = new URL(input);
+
+  } catch (error) {
+
+    result.className = "result danger";
+
+    result.innerHTML = `
+      <h2>❌ صيغة الرابط غير صحيحة</h2>
+      <p>تأكد من كتابة الرابط بشكل صحيح.</p>
+    `;
+
+    return;
+  }
+
+  let risk = 0;
+  let warnings = [];
+
+  const hostname = url.hostname.toLowerCase();
+  const fullURL = input.toLowerCase();
+
+  /*
+    1. HTTP
+  */
+
+  if (url.protocol === "http:") {
+
+    risk += 2;
+
+    warnings.push(
+      "⚠️ الرابط يستخدم HTTP بدل HTTPS."
+    );
+
+  }
+
+  /*
+    2. IP بدل اسم نطاق
+  */
+
+  const ipPattern =
+    /^(?:\d{1,3}\.){3}\d{1,3}$/;
+
+  if (ipPattern.test(hostname)) {
+
+    risk += 2;
+
+    warnings.push(
+      "⚠️ الرابط يستخدم عنوان IP بدل اسم نطاق."
+    );
+
+  }
+
+  /*
+    3. كلمات مرتبطة بتسجيل الدخول
+  */
+
+  const suspiciousWords = [
+    "login",
+    "signin",
+    "verify",
+    "verification",
+    "account",
+    "password",
+    "secure",
+    "update",
+    "confirm"
+  ];
+
+  let foundWords = [];
+
+  suspiciousWords.forEach(word => {
+
+    if (fullURL.includes(word)) {
+      foundWords.push(word);
+    }
+
+  });
+
+  if (foundWords.length > 0) {
+
+    risk += 1;
+
+    warnings.push(
+      "⚠️ يحتوي الرابط على كلمات مرتبطة بتسجيل الدخول أو التحقق: "
+      + foundWords.join(", ")
+    );
+
+  }
+
+  /*
+    4. طول الرابط
+  */
+
+  if (input.length > 150) {
+
+    risk += 1;
+
+    warnings.push(
+      "⚠️ الرابط طويل بشكل غير معتاد."
+    );
+
+  }
+
+  /*
+    5. عدد النطاقات الفرعية
+  */
+
+  const parts = hostname.split(
