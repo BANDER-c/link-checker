@@ -3,190 +3,162 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Link Checker</title>
+<title>فاحص الروابط</title>
 
 <style>
-*{
-    box-sizing:border-box;
-}
+*{box-sizing:border-box}
 
 body{
-    margin:0;
-    font-family:Arial,sans-serif;
-    background:
-        radial-gradient(circle at top,#123b2d 0,#07120f 35%,#050b09 100%);
-    color:white;
-    min-height:100vh;
+margin:0;
+font-family:Arial,Tahoma,sans-serif;
+background:#030807;
+color:#fff;
 }
 
 .container{
-    width:100%;
-    max-width:760px;
-    margin:auto;
-    padding:20px;
+max-width:850px;
+margin:auto;
+padding:18px;
 }
 
-/* البنر */
 .banner{
-    margin:20px 0 25px;
-    padding:45px 22px;
-    border-radius:26px;
-    text-align:center;
-    background:
-        linear-gradient(135deg,#061b14,#0b3d2e,#19a974);
-    box-shadow:0 18px 45px rgba(0,0,0,.45);
-    border:1px solid rgba(25,169,116,.35);
+padding:45px 20px;
+text-align:center;
+border-radius:25px;
+background:linear-gradient(135deg,#063d2b,#087a51,#16c784);
+box-shadow:0 15px 45px rgba(0,0,0,.45);
+border:1px solid #25d99a;
 }
 
 .shield{
-    font-size:55px;
-    margin-bottom:10px;
+font-size:55px;
 }
 
 .banner h1{
-    margin:0;
-    font-size:42px;
-    font-weight:800;
+font-size:42px;
+margin:10px 0;
 }
 
 .banner p{
-    margin:15px 0 0;
-    font-size:19px;
-    color:#d8fff0;
+color:#d9fff0;
+font-size:18px;
 }
 
-.line{
-    width:90px;
-    height:4px;
-    background:#19a974;
-    border-radius:20px;
-    margin:25px auto 0;
+.stats{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:12px;
+margin:20px 0;
 }
 
-/* صندوق الفحص */
-.box{
-    background:rgba(15,29,25,.94);
-    padding:25px;
-    border-radius:22px;
-    border:1px solid #214638;
-    box-shadow:0 12px 35px rgba(0,0,0,.3);
+.stat{
+background:#0b1712;
+border:1px solid #214d3c;
+border-radius:18px;
+padding:20px 10px;
+text-align:center;
 }
 
-.title{
-    text-align:center;
-    margin-top:0;
-    color:#58e6ae;
+.stat strong{
+display:block;
+font-size:30px;
+color:#38e6a4;
 }
 
-.subtitle{
-    text-align:center;
-    color:#b7c9c2;
-    margin-bottom:25px;
+.stat span{
+color:#849991;
+font-size:13px;
+}
+
+.card{
+background:#0b1712;
+border:1px solid #214d3c;
+border-radius:22px;
+padding:25px;
+box-shadow:0 12px 35px rgba(0,0,0,.3);
+}
+
+.card h2{
+text-align:center;
+color:#45e9aa;
+}
+
+.sub{
+text-align:center;
+color:#849991;
+margin-bottom:20px;
 }
 
 input{
-    width:100%;
-    padding:16px;
-    border-radius:12px;
-    border:1px solid #39594d;
-    background:#07120f;
-    color:white;
-    font-size:16px;
-    direction:ltr;
-    outline:none;
+width:100%;
+padding:17px;
+border-radius:12px;
+border:1px solid #365e4d;
+background:#030907;
+color:#fff;
+font-size:16px;
+direction:ltr;
+outline:none;
 }
 
 input:focus{
-    border-color:#19a974;
-    box-shadow:0 0 0 3px rgba(25,169,116,.15);
+border-color:#20d991;
 }
 
 button{
-    width:100%;
-    margin-top:15px;
-    padding:16px;
-    border:0;
-    border-radius:12px;
-    background:linear-gradient(135deg,#19a974,#0f8f62);
-    color:white;
-    font-size:17px;
-    font-weight:bold;
-    cursor:pointer;
-    transition:.2s;
-}
-
-button:active{
-    transform:scale(.98);
+width:100%;
+margin-top:14px;
+padding:17px;
+border:0;
+border-radius:12px;
+background:linear-gradient(135deg,#18d889,#0cad6e);
+color:#03130d;
+font-size:17px;
+font-weight:bold;
 }
 
 .result{
-    margin-top:20px;
-    padding:20px;
-    border-radius:15px;
-    display:none;
-    line-height:1.8;
+display:none;
+margin-top:20px;
+padding:20px;
+border-radius:15px;
+line-height:1.9;
 }
 
 .safe{
-    background:#064e3b;
-    border:1px solid #10b981;
+display:block;
+background:#064e3b;
+border:1px solid #10b981;
 }
 
 .warning{
-    background:#713f12;
-    border:1px solid #f59e0b;
+display:block;
+background:#713f12;
+border:1px solid #f59e0b;
 }
 
 .danger{
-    background:#7f1d1d;
-    border:1px solid #ef4444;
-}
-
-.result h2{
-    margin-top:0;
-}
-
-ul{
-    line-height:2;
+display:block;
+background:#7f1d1d;
+border:1px solid #ef4444;
 }
 
 .note{
-    margin:20px 0;
-    color:#81958d;
-    font-size:13px;
-    text-align:center;
-    line-height:1.7;
+text-align:center;
+color:#71857d;
+font-size:13px;
+line-height:1.8;
+margin:20px 0;
 }
 
-.footer{
-    text-align:center;
-    color:#536860;
-    font-size:12px;
-    margin-top:25px;
+@media(max-width:550px){
+.stats{
+grid-template-columns:1fr;
 }
 
-@media(max-width:500px){
-
-    .banner{
-        padding:35px 18px;
-    }
-
-    .banner h1{
-        font-size:32px;
-    }
-
-    .banner p{
-        font-size:17px;
-    }
-
-    .shield{
-        font-size:45px;
-    }
-
-    .box{
-        padding:18px;
-    }
+.banner h1{
+font-size:34px;
+}
 }
 </style>
 </head>
@@ -195,274 +167,197 @@ ul{
 
 <div class="container">
 
-    <section class="banner">
-        <div class="shield">🛡️</div>
+<section class="banner">
+<div class="shield">🛡️</div>
+<h1>LC</h1>
+<p>افحص الروابط واكتشف العلامات المشبوهة</p>
+</section>
 
-        <h1>Link Checker</h1>
+<section class="stats">
 
-        <p>
-            افحص الروابط واكتشف الروابط المشبوهة
-        </p>
-
-        <div class="line"></div>
-    </section>
-
-
-    <div class="box">
-
-        <h2 class="title">
-            🔍 محلل الروابط
-        </h2>
-
-        <div class="subtitle">
-            أدخل الرابط للحصول على تحليل مبدئي
-        </div>
-
-        <input
-            id="urlInput"
-            type="text"
-            placeholder="https://example.com"
-        >
-
-        <button onclick="analyzeURL()">
-            🔍 تحليل الرابط
-        </button>
-
-        <div id="result" class="result"></div>
-
-    </div>
-
-
-    <div class="note">
-        ⚠️ هذه الأداة تقدم تحليلًا مبدئيًا لبعض علامات الاشتباه،
-        ولا تضمن أن الرابط آمن أو خطير.
-    </div>
-
-    <div class="footer">
-        Link Checker © 2026
-    </div>
-
+<div class="stat">
+<strong>🔍</strong>
+<span>فحص سريع</span>
 </div>
 
+<div class="stat">
+<strong>7+</strong>
+<span>مؤشرات أمنية</span>
+</div>
+
+<div class="stat">
+<strong>100%</strong>
+<span>مجاني</span>
+</div>
+
+</section>
+
+<section class="card">
+
+<h2>🔎 تحليل الرابط</h2>
+
+<div class="sub">
+ضع الرابط هنا وسنحلله مبدئيًا
+</div>
+
+<input
+id="urlInput"
+type="text"
+placeholder="https://example.com"
+>
+
+<button onclick="analyzeURL()">
+🔍 فحص الرابط
+</button>
+
+<div id="result" class="result"></div>
+
+</section>
+
+<div class="note">
+⚠️ الفحص يعتمد على مؤشرات موجودة في الرابط فقط، ولا يضمن أن الموقع آمن أو خطير.
+</div>
+
+</div>
 
 <script>
 
 function analyzeURL(){
 
-    const input = document.getElementById("urlInput");
-    const result = document.getElementById("result");
+const input=document.getElementById("urlInput");
+const result=document.getElementById("result");
 
-    let value = input.value.trim();
+let value=input.value.trim();
 
-    if(!value){
+if(!value){
 
-        result.className = "result warning";
-        result.style.display = "block";
+result.className="result warning";
+result.style.display="block";
 
-        result.innerHTML = `
-            <h2>⚠️ أدخل رابطًا أولًا</h2>
-            <p>ضع الرابط في الخانة ثم اضغط تحليل الرابط.</p>
-        `;
+result.innerHTML=
+"<h2>⚠️ أدخل رابطًا أولًا</h2>"+
+"<p>ضع الرابط في الخانة ثم اضغط فحص الرابط.</p>";
 
-        return;
-    }
+return;
+}
 
+let testURL=value;
 
-    let testURL = value;
+if(!/^https?:\/\//i.test(testURL)){
+testURL="https://"+testURL;
+}
 
-    if(!/^https?:\/\//i.test(testURL)){
-        testURL = "https://" + testURL;
-    }
+let url;
 
+try{
+url=new URL(testURL);
+}catch(e){
 
-    let url;
+result.className="result danger";
+result.style.display="block";
 
-    try{
+result.innerHTML=
+"<h2>❌ الرابط غير صالح</h2>"+
+"<p>تأكد من كتابة الرابط بطريقة صحيحة.</p>";
 
-        url = new URL(testURL);
+return;
+}
 
-    }catch(e){
+let score=0;
+let warnings=[];
 
-        result.className = "result danger";
-        result.style.display = "block";
+if(url.protocol==="http:"){
+score+=2;
+warnings.push("الرابط يستخدم HTTP بدل HTTPS");
+}
 
-        result.innerHTML = `
-            <h2>❌ الرابط غير صالح</h2>
-            <p>تأكد من كتابة الرابط بطريقة صحيحة.</p>
-        `;
+if(value.includes("@")){
+score+=2;
+warnings.push("الرابط يحتوي على الرمز @");
+}
 
-        return;
-    }
+if(url.hostname.includes("xn--")){
+score+=2;
+warnings.push("اسم النطاق يستخدم Punycode");
+}
 
+const hyphens=(url.hostname.match(/-/g)||[]).length;
 
-    let score = 0;
-    let warnings = [];
+if(hyphens>=4){
+score++;
+warnings.push("اسم النطاق يحتوي على عدد كبير من الشرطات");
+}
 
+const parts=url.hostname.split(".").filter(Boolean);
 
-    // HTTP غير مشفر
-    if(url.protocol === "http:"){
+if(parts.length>=5){
+score++;
+warnings.push("اسم النطاق يحتوي على أجزاء كثيرة");
+}
 
-        score += 2;
+if(value.length>120){
+score++;
+warnings.push("الرابط طويل بشكل غير معتاد");
+}
 
-        warnings.push(
-            "الرابط يستخدم HTTP بدل HTTPS"
-        );
-    }
+const ipPattern=/^(\d{1,3}\.){3}\d{1,3}$/;
 
+if(ipPattern.test(url.hostname)){
+score+=2;
+warnings.push("الرابط يستخدم عنوان IP بدل اسم نطاق");
+}
 
-    // الرمز @
-    if(value.includes("@")){
+let type;
+let title;
+let message;
 
-        score += 2;
+if(score>=5){
 
-        warnings.push(
-            "الرابط يحتوي على الرمز @"
-        );
-    }
+type="danger";
+title="🔴 درجة اشتباه مرتفعة";
+message="تم اكتشاف عدة علامات تستحق الحذر.";
 
+}else if(score>=2){
 
-    // Punycode
-    if(url.hostname.includes("xn--")){
+type="warning";
+title="🟠 درجة اشتباه متوسطة";
+message="تم اكتشاف بعض العلامات التي تستحق الانتباه.";
 
-        score += 2;
+}else{
 
-        warnings.push(
-            "اسم النطاق يستخدم Punycode"
-        );
-    }
+type="safe";
+title="🟢 درجة اشتباه منخفضة";
+message="لم يتم اكتشاف علامات اشتباه واضحة.";
 
+}
 
-    // شرطات كثيرة
-    const hyphens =
-        (url.hostname.match(/-/g) || []).length;
+let warningHTML="";
 
-    if(hyphens >= 4){
+if(warnings.length){
 
-        score += 1;
+warningHTML="<h3>الأسباب:</h3><ul>";
 
-        warnings.push(
-            "اسم النطاق يحتوي على عدد كبير من الشرطات"
-        );
-    }
+warnings.forEach(function(w){
+warningHTML+="<li>"+w+"</li>";
+});
 
+warningHTML+="</ul>";
 
-    // أجزاء كثيرة في النطاق
-    const parts =
-        url.hostname.split(".").filter(Boolean);
+}else{
 
-    if(parts.length >= 5){
+warningHTML=
+"<p>لم يتم اكتشاف علامات اشتباه واضحة.</p>";
+}
 
-        score += 1;
+result.className="result "+type;
+result.style.display="block";
 
-        warnings.push(
-            "اسم النطاق يحتوي على أجزاء كثيرة"
-        );
-    }
+result.innerHTML=
+"<h2>"+title+"</h2>"+
+"<p>"+message+"</p>"+
+"<p><b>درجة التحليل: "+score+"</b></p>"+
+warningHTML;
 
-
-    // طول الرابط
-    if(value.length > 120){
-
-        score += 1;
-
-        warnings.push(
-            "الرابط طويل بشكل غير معتاد"
-        );
-    }
-
-
-    // استخدام IP بدل اسم النطاق
-    const ipPattern =
-        /^(\d{1,3}\.){3}\d{1,3}$/;
-
-    if(ipPattern.test(url.hostname)){
-
-        score += 2;
-
-        warnings.push(
-            "الرابط يستخدم عنوان IP بدل اسم نطاق"
-        );
-    }
-
-
-    let title;
-    let message;
-    let className;
-
-
-    if(score >= 5){
-
-        title = "🔴 درجة اشتباه مرتفعة";
-
-        message =
-            "تم اكتشاف عدة علامات قد تستحق الحذر.";
-
-        className = "danger";
-
-    }
-
-    else if(score >= 2){
-
-        title = "🟠 درجة اشتباه متوسطة";
-
-        message =
-            "تم اكتشاف بعض العلامات التي تستحق الانتباه.";
-
-        className = "warning";
-
-    }
-
-    else{
-
-        title = "🟢 درجة اشتباه منخفضة";
-
-        message =
-            "لم يتم اكتشاف علامات مريبة كثيرة في الرابط.";
-
-        className = "safe";
-    }
-
-
-    let warningHTML = "";
-
-
-    if(warnings.length > 0){
-
-        warningHTML = `
-            <h3>الأسباب:</h3>
-
-            <ul>
-                ${warnings
-                    .map(w => `<li>${w}</li>`)
-                    .join("")}
-            </ul>
-        `;
-
-    }else{
-
-        warningHTML =
-            "<p>لم يتم اكتشاف علامات اشتباه واضحة.</p>";
-    }
-
-
-    result.className =
-        "result " + className;
-
-    result.style.display =
-        "block";
-
-
-    result.innerHTML = `
-        <h2>${title}</h2>
-
-        <p>${message}</p>
-
-        <p>
-            <b>درجة التحليل: ${score}</b>
-        </p>
-
-        ${warningHTML}
-    `;
 }
 
 </script>
