@@ -3,76 +3,117 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cyber Link Analyzer</title>
+
+<title>Link Checker</title>
 
 <style>
-*{box-sizing:border-box}
+*{
+    box-sizing:border-box;
+}
 
 body{
-    <section style="margin:20px auto;max-width:1000px;padding:50px 25px;border-radius:24px;background:linear-gradient(135deg,#061b14,#0b3d2e,#19a974);color:#fff;text-align:center;box-shadow:0 15px 40px rgba(0,0,0,.3);font-family:Arial,sans-serif;">
-  <div style="font-size:50px;margin-bottom:15px;">🛡️</div>
-
-  <h1 style="margin:0;font-size:42px;font-weight:800;">
-    Link Checker
-  </h1>
-
-  <p style="margin:15px 0 0;font-size:20px;opacity:.95;">
-    افحص الروابط واكتشف الروابط المشبوهة
-  </p>
-
-  <div style="margin:25px auto 0;width:80px;height:4px;background:#19a974;border-radius:10px;"></div>
-</section>
     margin:0;
     font-family:Arial,sans-serif;
-    background:#0b1220;
+    background:
+        radial-gradient(circle at top,#123b2d 0,#07120f 35%,#050b09 100%);
     color:white;
+    min-height:100vh;
 }
 
 .container{
-    max-width:700px;
-    margin:50px auto;
+    width:100%;
+    max-width:760px;
+    margin:auto;
     padding:20px;
 }
 
-h1{
+/* البنر */
+.banner{
+    margin:20px 0 25px;
+    padding:45px 22px;
+    border-radius:26px;
     text-align:center;
-    color:#38bdf8;
+    background:
+        linear-gradient(135deg,#061b14,#0b3d2e,#19a974);
+    box-shadow:0 18px 45px rgba(0,0,0,.45);
+    border:1px solid rgba(25,169,116,.35);
+}
+
+.shield{
+    font-size:55px;
+    margin-bottom:10px;
+}
+
+.banner h1{
+    margin:0;
+    font-size:42px;
+    font-weight:800;
+}
+
+.banner p{
+    margin:15px 0 0;
+    font-size:19px;
+    color:#d8fff0;
+}
+
+.line{
+    width:90px;
+    height:4px;
+    background:#19a974;
+    border-radius:20px;
+    margin:25px auto 0;
+}
+
+/* صندوق الفحص */
+.box{
+    background:rgba(15,29,25,.94);
+    padding:25px;
+    border-radius:22px;
+    border:1px solid #214638;
+    box-shadow:0 12px 35px rgba(0,0,0,.3);
+}
+
+.title{
+    text-align:center;
+    margin-top:0;
+    color:#58e6ae;
 }
 
 .subtitle{
     text-align:center;
-    color:#cbd5e1;
-    margin-bottom:30px;
-}
-
-.box{
-    background:#111c2e;
-    padding:25px;
-    border-radius:18px;
-    border:1px solid #26364f;
+    color:#b7c9c2;
+    margin-bottom:25px;
 }
 
 input{
     width:100%;
-    padding:15px;
-    border-radius:10px;
-    border:1px solid #475569;
-    background:#0f172a;
+    padding:16px;
+    border-radius:12px;
+    border:1px solid #39594d;
+    background:#07120f;
     color:white;
     font-size:16px;
     direction:ltr;
+    outline:none;
+}
+
+input:focus{
+    border-color:#19a974;
+    box-shadow:0 0 0 3px rgba(25,169,116,.15);
 }
 
 button{
     width:100%;
     margin-top:15px;
-    padding:15px;
+    padding:16px;
     border:0;
-    border-radius:10px;
-    background:#0284c7;
+    border-radius:12px;
+    background:linear-gradient(135deg,#19a974,#0f8f62);
     color:white;
     font-size:17px;
     font-weight:bold;
+    cursor:pointer;
+    transition:.2s;
 }
 
 button:active{
@@ -82,23 +123,70 @@ button:active{
 .result{
     margin-top:20px;
     padding:20px;
-    border-radius:12px;
+    border-radius:15px;
     display:none;
+    line-height:1.8;
 }
 
-.safe{background:#064e3b}
-.warning{background:#713f12}
-.danger{background:#7f1d1d}
+.safe{
+    background:#064e3b;
+    border:1px solid #10b981;
+}
+
+.warning{
+    background:#713f12;
+    border:1px solid #f59e0b;
+}
+
+.danger{
+    background:#7f1d1d;
+    border:1px solid #ef4444;
+}
+
+.result h2{
+    margin-top:0;
+}
 
 ul{
     line-height:2;
 }
 
 .note{
-    margin-top:20px;
-    color:#94a3b8;
+    margin:20px 0;
+    color:#81958d;
     font-size:13px;
     text-align:center;
+    line-height:1.7;
+}
+
+.footer{
+    text-align:center;
+    color:#536860;
+    font-size:12px;
+    margin-top:25px;
+}
+
+@media(max-width:500px){
+
+    .banner{
+        padding:35px 18px;
+    }
+
+    .banner h1{
+        font-size:32px;
+    }
+
+    .banner p{
+        font-size:17px;
+    }
+
+    .shield{
+        font-size:45px;
+    }
+
+    .box{
+        padding:18px;
+    }
 }
 </style>
 </head>
@@ -107,29 +195,55 @@ ul{
 
 <div class="container">
 
-<h1>🛡️ Cyber Link Analyzer</h1>
+    <section class="banner">
+        <div class="shield">🛡️</div>
 
-<div class="subtitle">
-تحليل الروابط واكتشاف بعض العلامات المشبوهة
+        <h1>Link Checker</h1>
+
+        <p>
+            افحص الروابط واكتشف الروابط المشبوهة
+        </p>
+
+        <div class="line"></div>
+    </section>
+
+
+    <div class="box">
+
+        <h2 class="title">
+            🔍 محلل الروابط
+        </h2>
+
+        <div class="subtitle">
+            أدخل الرابط للحصول على تحليل مبدئي
+        </div>
+
+        <input
+            id="urlInput"
+            type="text"
+            placeholder="https://example.com"
+        >
+
+        <button onclick="analyzeURL()">
+            🔍 تحليل الرابط
+        </button>
+
+        <div id="result" class="result"></div>
+
+    </div>
+
+
+    <div class="note">
+        ⚠️ هذه الأداة تقدم تحليلًا مبدئيًا لبعض علامات الاشتباه،
+        ولا تضمن أن الرابط آمن أو خطير.
+    </div>
+
+    <div class="footer">
+        Link Checker © 2026
+    </div>
+
 </div>
 
-<div class="box">
-
-<input id="urlInput"
-       type="text"
-       placeholder="ضع الرابط هنا مثل https://example.com">
-
-<button onclick="analyzeURL()">🔍 تحليل الرابط</button>
-
-<div id="result" class="result"></div>
-
-</div>
-
-<div class="note">
-⚠️ هذه الأداة تقدم تحليلًا مبدئيًا ولا تضمن أن الرابط آمن أو خطير.
-</div>
-
-</div>
 
 <script>
 
@@ -141,149 +255,212 @@ function analyzeURL(){
     let value = input.value.trim();
 
     if(!value){
+
         result.className = "result warning";
         result.style.display = "block";
-        result.innerHTML = "⚠️ أدخل رابطًا أولًا.";
+
+        result.innerHTML = `
+            <h2>⚠️ أدخل رابطًا أولًا</h2>
+            <p>ضع الرابط في الخانة ثم اضغط تحليل الرابط.</p>
+        `;
+
         return;
     }
 
-    // إضافة https إذا لم يكتب المستخدم البروتوكول
+
     let testURL = value;
 
     if(!/^https?:\/\//i.test(testURL)){
         testURL = "https://" + testURL;
     }
 
+
     let url;
 
     try{
+
         url = new URL(testURL);
+
     }catch(e){
+
         result.className = "result danger";
         result.style.display = "block";
-        result.innerHTML = "❌ الرابط غير صالح.";
+
+        result.innerHTML = `
+            <h2>❌ الرابط غير صالح</h2>
+            <p>تأكد من كتابة الرابط بطريقة صحيحة.</p>
+        `;
+
         return;
     }
+
 
     let score = 0;
     let warnings = [];
 
-    // HTTP
-    if(url.protocol !== "https:"){
+
+    // HTTP غير مشفر
+    if(url.protocol === "http:"){
+
         score += 2;
-        warnings.push("الاتصال يستخدم HTTP وليس HTTPS");
-    }
 
-    // IP address
-    const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
-
-    if(ipPattern.test(url.hostname)){
-        score += 2;
-        warnings.push("الرابط يستخدم عنوان IP بدل اسم نطاق");
-    }
-
-    // كلمات مشبوهة
-    const suspiciousWords = [
-        "login",
-        "signin",
-        "verify",
-        "verification",
-        "account",
-        "password",
-        "secure",
-        "update",
-        "confirm"
-    ];
-
-    let foundWords = [];
-
-    suspiciousWords.forEach(word => {
-        if(value.toLowerCase().includes(word)){
-            foundWords.push(word);
-        }
-    });
-
-    if(foundWords.length > 0){
-        score += foundWords.length;
         warnings.push(
-            "يحتوي الرابط على كلمات شائعة في صفحات تسجيل الدخول أو التحقق: "
-            + foundWords.join(", ")
+            "الرابط يستخدم HTTP بدل HTTPS"
         );
     }
 
-    // طول الرابط
-    if(value.length > 150){
-        score += 1;
-        warnings.push("الرابط طويل بشكل غير معتاد");
+
+    // الرمز @
+    if(value.includes("@")){
+
+        score += 2;
+
+        warnings.push(
+            "الرابط يحتوي على الرمز @"
+        );
     }
 
-    // @
-    if(value.includes("@")){
-        score += 2;
-        warnings.push("الرابط يحتوي على الرمز @");
-    }
 
     // Punycode
     if(url.hostname.includes("xn--")){
+
         score += 2;
-        warnings.push("اسم النطاق يستخدم Punycode");
+
+        warnings.push(
+            "اسم النطاق يستخدم Punycode"
+        );
     }
+
 
     // شرطات كثيرة
-    const hyphens = (url.hostname.match(/-/g) || []).length;
+    const hyphens =
+        (url.hostname.match(/-/g) || []).length;
 
     if(hyphens >= 4){
+
         score += 1;
-        warnings.push("اسم النطاق يحتوي على عدد كبير من الشرطات");
+
+        warnings.push(
+            "اسم النطاق يحتوي على عدد كبير من الشرطات"
+        );
     }
+
 
     // أجزاء كثيرة في النطاق
-    const parts = url.hostname.split(".").filter(Boolean);
+    const parts =
+        url.hostname.split(".").filter(Boolean);
 
     if(parts.length >= 5){
+
         score += 1;
-        warnings.push("اسم النطاق يحتوي على أجزاء كثيرة");
+
+        warnings.push(
+            "اسم النطاق يحتوي على أجزاء كثيرة"
+        );
     }
+
+
+    // طول الرابط
+    if(value.length > 120){
+
+        score += 1;
+
+        warnings.push(
+            "الرابط طويل بشكل غير معتاد"
+        );
+    }
+
+
+    // استخدام IP بدل اسم النطاق
+    const ipPattern =
+        /^(\d{1,3}\.){3}\d{1,3}$/;
+
+    if(ipPattern.test(url.hostname)){
+
+        score += 2;
+
+        warnings.push(
+            "الرابط يستخدم عنوان IP بدل اسم نطاق"
+        );
+    }
+
 
     let title;
     let message;
     let className;
 
+
     if(score >= 5){
+
         title = "🔴 درجة اشتباه مرتفعة";
-        message = "تم اكتشاف عدة علامات قد تستحق الحذر.";
+
+        message =
+            "تم اكتشاف عدة علامات قد تستحق الحذر.";
+
         className = "danger";
+
     }
+
     else if(score >= 2){
+
         title = "🟠 درجة اشتباه متوسطة";
-        message = "تم اكتشاف بعض العلامات التي تستحق الانتباه.";
+
+        message =
+            "تم اكتشاف بعض العلامات التي تستحق الانتباه.";
+
         className = "warning";
+
     }
+
     else{
+
         title = "🟢 درجة اشتباه منخفضة";
-        message = "لم يتم اكتشاف علامات مريبة كثيرة في الرابط.";
+
+        message =
+            "لم يتم اكتشاف علامات مريبة كثيرة في الرابط.";
+
         className = "safe";
     }
 
+
     let warningHTML = "";
 
+
     if(warnings.length > 0){
+
         warningHTML = `
-        <h3>الأسباب:</h3>
-        <ul>
-            ${warnings.map(w => `<li>${w}</li>`).join("")}
-        </ul>`;
+            <h3>الأسباب:</h3>
+
+            <ul>
+                ${warnings
+                    .map(w => `<li>${w}</li>`)
+                    .join("")}
+            </ul>
+        `;
+
     }else{
-        warningHTML = "<p>لم يتم اكتشاف علامات اشتباه واضحة.</p>";
+
+        warningHTML =
+            "<p>لم يتم اكتشاف علامات اشتباه واضحة.</p>";
     }
 
-    result.className = "result " + className;
-    result.style.display = "block";
+
+    result.className =
+        "result " + className;
+
+    result.style.display =
+        "block";
+
 
     result.innerHTML = `
         <h2>${title}</h2>
+
         <p>${message}</p>
-        <p><b>درجة التحليل: ${score}</b></p>
+
+        <p>
+            <b>درجة التحليل: ${score}</b>
+        </p>
+
         ${warningHTML}
     `;
 }
