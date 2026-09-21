@@ -3,317 +3,384 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cyber Link Analyzer</title>
+<title>فاحص الروابط</title>
 
 <style>
-* {
-  box-sizing: border-box;
+*{box-sizing:border-box}
+
+body{
+margin:0;
+font-family:Arial,Tahoma,sans-serif;
+background:#030807;
+color:#fff;
 }
 
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #0b1020;
-  color: white;
+.container{
+max-width:850px;
+margin:auto;
+padding:18px;
 }
 
-.container {
-  width: 92%;
-  max-width: 850px;
-  margin: 40px auto;
+.banner{
+padding:45px 20px;
+text-align:center;
+border-radius:25px;
+background:linear-gradient(135deg,#063d2b,#087a51,#16c784);
+box-shadow:0 15px 45px rgba(0,0,0,.45);
+border:1px solid #25d99a;
 }
 
-header {
-  text-align: center;
-  margin-bottom: 25px;
+.shield{
+font-size:55px;
 }
 
-h1 {
-  color: #00e5ff;
+.banner h1{
+font-size:42px;
+margin:10px 0;
 }
 
-.subtitle {
-  color: #aeb8cc;
+.banner p{
+color:#d9fff0;
+font-size:18px;
 }
 
-.card {
-  background: #151d33;
-  border: 1px solid #2c3854;
-  border-radius: 16px;
-  padding: 22px;
-  margin-bottom: 20px;
+.stats{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:12px;
+margin:20px 0;
 }
 
-input {
-  width: 100%;
-  padding: 15px;
-  border-radius: 10px;
-  border: 1px solid #394765;
-  background: #080d18;
-  color: white;
-  font-size: 16px;
-  direction: ltr;
+.stat{
+background:#0b1712;
+border:1px solid #214d3c;
+border-radius:18px;
+padding:20px 10px;
+text-align:center;
 }
 
-button {
-  width: 100%;
-  padding: 14px;
-  margin-top: 15px;
-  border: none;
-  border-radius: 10px;
-  background: #00bcd4;
-  color: #001018;
-  font-size: 16px;
-  font-weight: bold;
-  cursor: pointer;
+.stat strong{
+display:block;
+font-size:30px;
+color:#38e6a4;
 }
 
-button:hover {
-  opacity: .85;
+.stat span{
+color:#849991;
+font-size:13px;
 }
 
-.result {
-  text-align: center;
-  padding: 20px;
-  border-radius: 12px;
-  margin-top: 20px;
+.card{
+background:#0b1712;
+border:1px solid #214d3c;
+border-radius:22px;
+padding:25px;
+box-shadow:0 12px 35px rgba(0,0,0,.3);
 }
 
-.safe {
-  background: #123c2a;
-  border: 1px solid #2ecc71;
+.card h2{
+text-align:center;
+color:#45e9aa;
 }
 
-.warning {
-  background: #493c0d;
-  border: 1px solid #f1c40f;
+.sub{
+text-align:center;
+color:#849991;
+margin-bottom:20px;
 }
 
-.danger {
-  background: #4a1820;
-  border: 1px solid #ff5252;
+input{
+width:100%;
+padding:17px;
+border-radius:12px;
+border:1px solid #365e4d;
+background:#030907;
+color:#fff;
+font-size:16px;
+direction:ltr;
+outline:none;
 }
 
-.score {
-  font-size: 42px;
-  font-weight: bold;
+input:focus{
+border-color:#20d991;
 }
 
-ul {
-  line-height: 2;
+button{
+width:100%;
+margin-top:14px;
+padding:17px;
+border:0;
+border-radius:12px;
+background:linear-gradient(135deg,#18d889,#0cad6e);
+color:#03130d;
+font-size:17px;
+font-weight:bold;
 }
 
-li {
-  margin-bottom: 5px;
+.result{
+display:none;
+margin-top:20px;
+padding:20px;
+border-radius:15px;
+line-height:1.9;
 }
 
-.info {
-  color: #aeb8cc;
-  font-size: 14px;
+.safe{
+display:block;
+background:#064e3b;
+border:1px solid #10b981;
 }
 
-code {
-  direction: ltr;
-  display: inline-block;
+.warning{
+display:block;
+background:#713f12;
+border:1px solid #f59e0b;
 }
 
-.banner {
-  background: linear-gradient(135deg, #063b3b, #0b6b5f);
-  color: white;
-  padding: 22px;
-  border-radius: 18px;
-  text-align: center;
-  margin: 20px auto;
-  font-size: 24px;
-  font-weight: bold;
-  box-shadow: 0 8px 25px rgba(0,0,0,.25);
+.danger{
+display:block;
+background:#7f1d1d;
+border:1px solid #ef4444;
 }
 
-.banner span {
-  display: block;
-  margin-top: 8px;
-  font-size: 15px;
-  opacity: .9;
-}</style>
+.note{
+text-align:center;
+color:#71857d;
+font-size:13px;
+line-height:1.8;
+margin:20px 0;
+}
+
+@media(max-width:550px){
+.stats{
+grid-template-columns:1fr;
+}
+
+.banner h1{
+font-size:34px;
+}
+}
+</style>
 </head>
 
 <body>
-<div class="banner">
-  🛡️ الحماية الذكية
-  <span>محلل الروابط المشبوهة</span>
-</div>
+
 <div class="container">
 
-<header>
-  <h1>🛡️ Cyber Link Analyzer</h1>
-  <p class="subtitle">
-    أداة تعليمية لتحليل الروابط واكتشاف بعض المؤشرات المشبوهة
-  </p>
-</header>
+<section class="banner">
+<div class="shield">🛡️</div>
+<h1>LC</h1>
+<p>افحص الروابط واكتشف العلامات المشبوهة</p>
+</section>
 
-<div class="card">
+<section class="stats">
 
-  <h2>🔎 تحليل رابط</h2>
-
-  <p class="info">
-    أدخل الرابط هنا. الأداة لا تفتح الرابط، وإنما تحلل شكله فقط.
-  </p>
-
-  <input
-    id="urlInput"
-    type="text"
-    placeholder="https://example.com/login"
-  >
-
-  <button onclick="analyzeURL()">
-    🔍 تحليل الرابط
-  </button>
-
-  <div id="result"></div>
-
+<div class="stat">
+<strong>🔍</strong>
+<span>فحص سريع</span>
 </div>
 
-<div class="card">
+<div class="stat">
+<strong>7+</strong>
+<span>مؤشرات أمنية</span>
+</div>
 
-  <h2>📋 المؤشرات المكتشفة</h2>
+<div class="stat">
+<strong>100%</strong>
+<span>مجاني</span>
+</div>
 
-  <ul id="details">
-    <li>لم يتم تحليل أي رابط بعد.</li>
-  </ul>
+</section>
 
+<section class="card">
+
+<h2>🔎 تحليل الرابط</h2>
+
+<div class="sub">
+ضع الرابط هنا وسنحلله مبدئيًا
+</div>
+
+<input
+id="urlInput"
+type="text"
+placeholder="https://example.com"
+>
+
+<button onclick="analyzeURL()">
+🔍 فحص الرابط
+</button>
+
+<div id="result" class="result"></div>
+
+</section>
+
+<div class="note">
+⚠️ الفحص يعتمد على مؤشرات موجودة في الرابط فقط، ولا يضمن أن الموقع آمن أو خطير.
 </div>
 
 </div>
 
 <script>
 
-function analyzeURL() {
+async function analyzeURL(){
 
-  const input = document.getElementById("urlInput").value.trim();
-  const result = document.getElementById("result");
-  const details = document.getElementById("details");
+const input=document.getElementById("urlInput");
+const result=document.getElementById("result");
 
-  result.innerHTML = "";
-  details.innerHTML = "";
+let value=input.value.trim();
 
-  if (!input) {
+if(!value){
+result.className="result warning";
+result.style.display="block";
+result.innerHTML=
+"<h2>⚠️ أدخل رابطًا أولًا</h2>"+
+"<p>ضع الرابط في الخانة ثم اضغط فحص الرابط.</p>";
+return;
+}
 
-    result.className = "result danger";
-    result.innerHTML = `
-      <h2>⚠️ لم تدخل رابطًا</h2>
-    `;
+let testURL=value;
 
-    return;
-  }
+if(!/^https?:\/\//i.test(testURL)){
+testURL="https://"+testURL;
+}
 
-  let url;
+try{
+new URL(testURL);
+}catch(e){
+result.className="result danger";
+result.style.display="block";
+result.innerHTML=
+"<h2>❌ الرابط غير صالح</h2>"+
+"<p>تأكد من كتابة الرابط بطريقة صحيحة.</p>";
+return;
+}
 
-  try {
+result.className="result warning";
+result.style.display="block";
+result.innerHTML=
+"<h2>🔍 جاري التحليل...</h2>"+
+"<p>يتم فحص الرابط بواسطة VirusTotal.</p>";
 
-    url = new URL(input);
+try{
 
-  } catch (error) {
+const response=await fetch("/scan",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({url:testURL})
+});
 
-    result.className = "result danger";
+const data=await response.json();
 
-    result.innerHTML = `
-      <h2>❌ صيغة الرابط غير صحيحة</h2>
-      <p>تأكد من كتابة الرابط بشكل صحيح.</p>
-    `;
+if(!response.ok){
+throw new Error(data.error || "فشل إرسال الرابط للفحص");
+}
 
-    return;
-  }
+const analysisId=data.data && data.data.id;
 
-  let risk = 0;
-  let warnings = [];
+if(!analysisId){
+throw new Error("لم يتم الحصول على رقم التحليل");
+}
 
-  const hostname = url.hostname.toLowerCase();
-  const fullURL = input.toLowerCase();
+let analysis=null;
 
-  /*
-    1. HTTP
-  */
+for(let i=0;i<12;i++){
 
-  if (url.protocol === "http:") {
+await new Promise(resolve=>setTimeout(resolve,5000));
 
-    risk += 2;
+const check=await fetch(
+"/scan/"+encodeURIComponent(analysisId)
+);
 
-    warnings.push(
-      "⚠️ الرابط يستخدم HTTP بدل HTTPS."
-    );
+const checkData=await check.json();
 
-  }
+if(!check.ok){
+throw new Error(
+checkData.error || "تعذر الحصول على نتيجة التحليل"
+);
+}
 
-  /*
-    2. IP بدل اسم نطاق
-  */
+analysis=checkData.data;
 
-  const ipPattern =
-    /^(?:\d{1,3}\.){3}\d{1,3}$/;
+if(
+analysis &&
+analysis.attributes &&
+analysis.attributes.status==="completed"
+){
+break;
+}
 
-  if (ipPattern.test(hostname)) {
+result.innerHTML=
+"<h2>🔄 جاري التحليل...</h2>"+
+"<p>VirusTotal ما زال يفحص الرابط.</p>"+
+"<p>انتظر قليلًا...</p>";
+}
 
-    risk += 2;
+if(
+!analysis ||
+!analysis.attributes ||
+analysis.attributes.status!=="completed"
+){
+throw new Error("انتهى وقت الانتظار قبل اكتمال التحليل");
+}
 
-    warnings.push(
-      "⚠️ الرابط يستخدم عنوان IP بدل اسم نطاق."
-    );
+const stats=analysis.attributes.stats || {};
 
-  }
+const malicious=Number(stats.malicious||0);
+const suspicious=Number(stats.suspicious||0);
+const harmless=Number(stats.harmless||0);
+const undetected=Number(stats.undetected||0);
 
-  /*
-    3. كلمات مرتبطة بتسجيل الدخول
-  */
+const detections=malicious+suspicious;
+const total=malicious+suspicious+harmless+undetected;
 
-  const suspiciousWords = [
-    "login",
-    "signin",
-    "verify",
-    "verification",
-    "account",
-    "password",
-    "secure",
-    "update",
-    "confirm"
-  ];
+let title;
+let type;
+let message;
 
-  let foundWords = [];
+if(malicious>0){
 
-  suspiciousWords.forEach(word => {
+type="danger";
+title="🔴 الرابط قد يكون خطيرًا";
+message="اكتشفت بعض محركات الفحص مؤشرات ضارة في الرابط.";
 
-    if (fullURL.includes(word)) {
-      foundWords.push(word);
-    }
+}else if(suspicious>0){
 
-  });
+type="warning";
+title="🟠 الرابط مشبوه";
+message="اكتشفت محركات الفحص مؤشرات تستحق الحذر.";
 
-  if (foundWords.length > 0) {
+}else{
 
-    risk += 1;
+type="safe";
+title="🟢 لم يتم اكتشاف تهديد";
+message="لم تكتشف محركات الفحص المتاحة مؤشرات ضارة أو مشبوهة.";
 
-    warnings.push(
-      "⚠️ يحتوي الرابط على كلمات مرتبطة بتسجيل الدخول أو التحقق: "
-      + foundWords.join(", ")
-    );
+}
 
-  }
+result.className="result "+type;
+result.innerHTML=
+"<h2>"+title+"</h2>"+
+"<p>"+message+"</p>"+
+"<p><b>الاكتشافات: "+detections+" من "+total+"</b></p>"+
+"<p>ضار: "+malicious+
+" | مشبوه: "+suspicious+
+" | سليم: "+harmless+
+" | غير مكتشف: "+undetected+"</p>";
 
-  /*
-    4. طول الرابط
-  */
+}catch(error){
 
-  if (input.length > 150) {
+result.className="result danger";
+result.innerHTML=
+"<h2>❌ حدث خطأ أثناء الفحص</h2>"+
+"<p>"+error.message+"</p>";
 
-    risk += 1;
+}
 
-    warnings.push(
-      "⚠️ الرابط طويل بشكل غير معتاد."
-    );
+}
 
-  }
+</script>
 
-  /*
-    5. عدد النطاقات الفرعية
-  */
-
-  const parts = hostname.split(
+</body>
+</html>
