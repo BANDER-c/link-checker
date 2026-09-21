@@ -263,7 +263,7 @@ result.innerHTML=
 
 try{
 
-const response=await fetch("https://1c-backend-7viz.onrender.com/scan",{
+const response=await fetch("https://lc-backend-7viz.onrender.com/scan",{
 method:"POST",
 headers:{
 "Content-Type":"application/json"
@@ -290,7 +290,7 @@ for(let i=0;i<12;i++){
 await new Promise(resolve=>setTimeout(resolve,5000));
 
 const check=await fetch(
- "https://1c-backend-7viz.onrender.com/scan/"+encodeURIComponent(analysisId)
+ "https://lc-backend-7viz.onrender.com/scan/"+encodeURIComponent(analysisId)
 );
 
 const checkData=await check.json();
