@@ -3,161 +3,352 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>فاحص الروابط</title>
+<title>LC | التحقق من أمان الروابط</title>
 
 <style>
 *{box-sizing:border-box}
 
+:root{
+--bg:#f5f8fc;
+--surface:#ffffff;
+--surface2:#eef4fb;
+--text:#102033;
+--muted:#687b91;
+--border:#dce6f1;
+--primary:#126fe8;
+--primary2:#0754b8;
+--accent:#1b9cff;
+--shadow:0 18px 50px rgba(24,55,90,.10);
+}
+
+body.dark{
+--bg:#07111f;
+--surface:#0d1a2b;
+--surface2:#111f32;
+--text:#f4f8ff;
+--muted:#91a4bb;
+--border:#1b3048;
+--shadow:0 18px 55px rgba(0,0,0,.30);
+}
+
 body{
 margin:0;
 font-family:Arial,Tahoma,sans-serif;
-background:#030807;
-color:#fff;
+background:var(--bg);
+color:var(--text);
+transition:background .25s,color .25s;
+min-height:100vh;
 }
 
 .container{
-max-width:850px;
+max-width:1050px;
 margin:auto;
-padding:18px;
+padding:20px;
 }
 
-.banner{
-padding:45px 20px;
-text-align:center;
-border-radius:25px;
-background:linear-gradient(135deg,#063d2b,#087a51,#16c784);
-box-shadow:0 15px 45px rgba(0,0,0,.45);
-border:1px solid #25d99a;
+/* الشريط العلوي */
+.nav{
+height:64px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+margin-bottom:35px;
 }
 
-.shield{
-font-size:55px;
+.logo{
+display:flex;
+align-items:center;
+gap:11px;
+font-weight:800;
+font-size:22px;
+letter-spacing:1px;
 }
 
-.banner h1{
-font-size:42px;
-margin:10px 0;
-}
-
-.banner p{
-color:#d9fff0;
-font-size:18px;
-}
-
-.stats{
+.logo-mark{
+width:42px;
+height:42px;
 display:grid;
-grid-template-columns:repeat(3,1fr);
-gap:12px;
-margin:20px 0;
+place-items:center;
+border-radius:13px;
+background:linear-gradient(135deg,var(--primary),var(--accent));
+color:white;
+box-shadow:0 8px 22px rgba(18,111,232,.25);
 }
 
-.stat{
-background:#0b1712;
-border:1px solid #214d3c;
-border-radius:18px;
-padding:20px 10px;
-text-align:center;
-}
-
-.stat strong{
+.logo small{
 display:block;
-font-size:30px;
-color:#38e6a4;
+font-size:10px;
+font-weight:500;
+letter-spacing:0;
+color:var(--muted);
+margin-top:2px;
 }
 
-.stat span{
-color:#849991;
+.theme-btn{
+border:1px solid var(--border);
+background:var(--surface);
+color:var(--text);
+width:45px;
+height:45px;
+border-radius:13px;
+font-size:19px;
+cursor:pointer;
+box-shadow:0 5px 18px rgba(0,0,0,.05);
+}
+
+/* البطل */
+.hero{
+text-align:center;
+max-width:760px;
+margin:0 auto 38px;
+}
+
+.hero-badge{
+display:inline-flex;
+align-items:center;
+gap:7px;
+padding:8px 14px;
+border-radius:50px;
+background:var(--surface2);
+border:1px solid var(--border);
+color:var(--primary);
 font-size:13px;
-}
-
-.card{
-background:#0b1712;
-border:1px solid #214d3c;
-border-radius:22px;
-padding:25px;
-box-shadow:0 12px 35px rgba(0,0,0,.3);
-}
-
-.card h2{
-text-align:center;
-color:#45e9aa;
-}
-
-.sub{
-text-align:center;
-color:#849991;
-margin-bottom:20px;
-}
-
-input{
-width:100%;
-padding:17px;
-border-radius:12px;
-border:1px solid #365e4d;
-background:#030907;
-color:#fff;
-font-size:16px;
-direction:ltr;
-outline:none;
-}
-
-input:focus{
-border-color:#20d991;
-}
-
-button{
-width:100%;
-margin-top:14px;
-padding:17px;
-border:0;
-border-radius:12px;
-background:linear-gradient(135deg,#18d889,#0cad6e);
-color:#03130d;
-font-size:17px;
 font-weight:bold;
 }
 
+.hero h1{
+font-size:clamp(34px,6vw,58px);
+line-height:1.1;
+margin:20px 0 14px;
+letter-spacing:-1.5px;
+}
+
+.hero h1 span{
+color:var(--primary);
+}
+
+.hero p{
+color:var(--muted);
+font-size:18px;
+line-height:1.8;
+margin:0;
+}
+
+/* لوحة الفحص */
+.scan-panel{
+max-width:780px;
+margin:auto;
+background:var(--surface);
+border:1px solid var(--border);
+border-radius:24px;
+padding:28px;
+box-shadow:var(--shadow);
+}
+
+.scan-label{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:10px;
+font-size:14px;
+font-weight:bold;
+}
+
+.scan-label span{
+font-weight:normal;
+color:var(--muted);
+}
+
+.input-box{
+display:flex;
+gap:10px;
+padding:7px;
+background:var(--surface2);
+border:1px solid var(--border);
+border-radius:16px;
+}
+
+input{
+min-width:0;
+flex:1;
+border:0;
+outline:0;
+background:transparent;
+color:var(--text);
+font-size:16px;
+padding:13px 12px;
+direction:ltr;
+}
+
+input::placeholder{
+color:#8b9bad;
+}
+
+.scan-btn{
+border:0;
+border-radius:12px;
+padding:0 25px;
+min-height:50px;
+background:linear-gradient(135deg,var(--primary),var(--primary2));
+color:#fff;
+font-size:16px;
+font-weight:bold;
+cursor:pointer;
+box-shadow:0 8px 22px rgba(18,111,232,.22);
+transition:.2s;
+white-space:nowrap;
+}
+
+.scan-btn:hover{
+transform:translateY(-1px);
+box-shadow:0 11px 27px rgba(18,111,232,.32);
+}
+
+.scan-hint{
+margin:13px 3px 0;
+color:var(--muted);
+font-size:12px;
+}
+
+/* المميزات */
+.features{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:15px;
+max-width:780px;
+margin:18px auto 0;
+}
+
+.feature{
+background:var(--surface);
+border:1px solid var(--border);
+border-radius:18px;
+padding:18px;
+}
+
+.feature-icon{
+width:40px;
+height:40px;
+display:grid;
+place-items:center;
+border-radius:12px;
+background:var(--surface2);
+font-size:19px;
+margin-bottom:12px;
+}
+
+.feature strong{
+display:block;
+font-size:14px;
+margin-bottom:5px;
+}
+
+.feature span{
+font-size:12px;
+color:var(--muted);
+line-height:1.6;
+}
+
+/* النتيجة */
 .result{
 display:none;
 margin-top:20px;
-padding:20px;
-border-radius:15px;
+padding:22px;
+border-radius:18px;
 line-height:1.9;
 }
 
 .safe{
 display:block;
-background:#064e3b;
-border:1px solid #10b981;
+background:#e8faf4;
+color:#064e3b;
+border:1px solid #9ce7d0;
 }
 
 .warning{
 display:block;
-background:#713f12;
-border:1px solid #f59e0b;
+background:#fff8e6;
+color:#704900;
+border:1px solid #f5d27b;
 }
 
 .danger{
 display:block;
-background:#7f1d1d;
-border:1px solid #ef4444;
+background:#fff0f1;
+color:#761d25;
+border:1px solid #f0a5ac;
 }
 
-.note{
+body.dark .safe{
+background:#073b32;
+color:#d8fff4;
+border-color:#176c5b;
+}
+
+body.dark .warning{
+background:#45340d;
+color:#ffe9a8;
+border-color:#8a671b;
+}
+
+body.dark .danger{
+background:#481a20;
+color:#ffdadd;
+border-color:#8c333d;
+}
+
+.footer{
 text-align:center;
-color:#71857d;
-font-size:13px;
+color:var(--muted);
+font-size:12px;
 line-height:1.8;
-margin:20px 0;
+margin:28px auto 5px;
+max-width:700px;
 }
 
-@media(max-width:550px){
-.stats{
+@media(max-width:650px){
+.container{padding:15px}
+
+.nav{
+margin-bottom:25px;
+}
+
+.hero{
+margin-bottom:25px;
+}
+
+.hero p{
+font-size:15px;
+}
+
+.scan-panel{
+padding:18px;
+border-radius:20px;
+}
+
+.input-box{
+display:block;
+padding:8px;
+}
+
+input{
+width:100%;
+padding:14px 10px;
+}
+
+.scan-btn{
+width:100%;
+margin-top:7px;
+padding:14px;
+}
+
+.features{
 grid-template-columns:1fr;
 }
 
-.banner h1{
-font-size:34px;
+.theme-btn{
+width:43px;
+height:43px;
 }
 }
 </style>
@@ -167,60 +358,101 @@ font-size:34px;
 
 <div class="container">
 
-<section class="banner">
-<div class="shield">🛡️</div>
-<h1>LC</h1>
-<p>افحص الروابط واكتشف العلامات المشبوهة</p>
-</section>
-
-<section class="stats">
-
-<div class="stat">
-<strong>🔍</strong>
-<span>فحص سريع</span>
+<nav class="nav">
+<div class="logo">
+<div class="logo-mark">LC</div>
+<div>
+LC
+<small>LINK CHECK</small>
+</div>
 </div>
 
-<div class="stat">
-<strong>7+</strong>
-<span>مؤشرات أمنية</span>
+<button class="theme-btn" id="themeBtn" type="button" aria-label="تغيير المظهر">🌙</button>
+</nav>
+
+<header class="hero">
+<div class="hero-badge">🛡️ أداة للتحقق من الروابط</div>
+
+<h1>
+تحقق من أمان<br>
+<span>الرابط قبل فتحه</span>
+</h1>
+
+<p>
+حلّل الرابط واكتشف المؤشرات المشبوهة باستخدام
+التحليل المحلي ونتائج VirusTotal.
+</p>
+</header>
+
+<section class="scan-panel">
+
+<div class="scan-label">
+<label for="urlInput">أدخل الرابط</label>
+<span>URL</span>
 </div>
 
-<div class="stat">
-<strong>100%</strong>
-<span>مجاني</span>
-</div>
-
-</section>
-
-<section class="card">
-
-<h2>🔎 تحليل الرابط</h2>
-
-<div class="sub">
-ضع الرابط هنا وسنحلله مبدئيًا
-</div>
-
+<div class="input-box">
 <input
 id="urlInput"
 type="text"
 placeholder="https://example.com"
+autocomplete="off"
 >
 
-<button onclick="analyzeURL()">
+<button class="scan-btn" onclick="analyzeURL()">
 🔍 فحص الرابط
 </button>
+</div>
+
+<div class="scan-hint">
+لا تفتح الرابط المشبوه قبل ظهور نتيجة الفحص.
+</div>
 
 <div id="result" class="result"></div>
 
 </section>
 
-<div class="note">
-⚠️ الفحص يعتمد على مؤشرات موجودة في الرابط فقط، ولا يضمن أن الموقع آمن أو خطير.
+<section class="features">
+
+<div class="feature">
+<div class="feature-icon">⚡</div>
+<strong>تحليل سريع</strong>
+<span>تظهر المؤشرات الأولية للرابط مباشرة.</span>
+</div>
+
+<div class="feature">
+<div class="feature-icon">🔎</div>
+<strong>تحليل متعدد المؤشرات</strong>
+<span>فحص خصائص الرابط بحثًا عن علامات مشبوهة.</span>
+</div>
+
+<div class="feature">
+<div class="feature-icon">🛡️</div>
+<strong>VirusTotal</strong>
+<span>تحديث النتيجة عند توفر نتائج الفحص الخارجي.</span>
+</div>
+
+</section>
+
+<div class="footer">
+LC — Link Check<br>
+نتيجة الفحص تقديرية ولا تُعد ضمانًا نهائيًا لأمان الرابط.
 </div>
 
 </div>
 
 <script>
+const themeBtn=document.getElementById("themeBtn");
+
+themeBtn.addEventListener("click",function(){
+document.body.classList.toggle("dark");
+themeBtn.textContent=document.body.classList.contains("dark")?"☀️":"🌙";
+});
+</script>
+
+<script>
+
+
 
 
 function analyzeRisk(url) {
