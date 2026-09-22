@@ -222,164 +222,486 @@ placeholder="https://example.com"
 
 <script>
 
+
+function analyzeRisk(url) {
+
+  const reasons = [];
+  let score = 0;
+
+  let parsed;
+
+  try {
+    parsed = new URL(url);
+  } catch {
+    return {
+      score: 100,
+      reasons: ["الرابط غير صالح"]
+    };
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+  const fullUrl = url.toLowerCase();
+
+  // استخدام HTTP غير المشفر
+  if (parsed.protocol === "http:") {
+    score += 5;
+    reasons.push("الرابط يستخدم HTTP غير المشفر");
+  }
+
+  // استخدام IP بدل اسم نطاق
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) {
+    score += 20;
+    reasons.push("يستخدم عنوان IP بدل اسم نطاق");
+  }
+
+  // Punycode
+  if (hostname.includes("xn--")) {
+    score += 20;
+    reasons.push("النطاق يستخدم Punycode");
+  }
+
+  // الرمز @
+  if (fullUrl.includes("@")) {
+    score += 15;
+    reasons.push("الرابط يحتوي على الرمز @");
+  }
+
+  // طول الرابط
+  if (url.length > 120) {
+    score += 10;
+    reasons.push("الرابط طويل بشكل غير معتاد");
+  }
+
+  // كثرة النطاقات الفرعية
+  const parts = hostname.split(".");
+  if (parts.length >= 5) {
+    score += 10;
+    reasons.push("يحتوي على عدد كبير من النطاقات الفرعية");
+  }
+
+  // كلمات قد تظهر في صفحات التصيد
+  const suspiciousWords = [
+    "login",
+    "verify",
+    "verification",
+    "secure",
+    "account",
+    "password",
+    "signin",
+    "update",
+    "confirm"
+  ];
+
+  const foundWords = suspiciousWords.filter(word =>
+    fullUrl.includes(word)
+  );
+
+  if (foundWords.length > 0) {
+    score += Math.min(foundWords.length * 5, 15);
+
+    reasons.push(
+      "يحتوي على كلمات قد تُستخدم في صفحات التصيد: " +
+      foundWords.join(", ")
+    );
+  }
+
+  // أنماط شائعة لانتحال أسماء العلامات التجارية
+  const impersonationPatterns = [
+    "goog1e",
+    "g00gle",
+    "micros0ft",
+    "micr0soft",
+    "paypa1",
+    "faceb00k",
+    "app1e"
+  ];
+
+  const foundImpersonation = impersonationPatterns.find(pattern =>
+    hostname.includes(pattern)
+  );
+
+  if (foundImpersonation) {
+    score += 40;
+
+    reasons.push(
+      "النطاق يحتوي على نمط قد يشير إلى انتحال اسم علامة تجارية"
+    );
+  }
+
+  // كثرة الشرطات
+  const hyphens = (hostname.match(/-/g) || []).length;
+
+  if (hyphens >= 4) {
+    score += 10;
+    reasons.push("النطاق يحتوي على عدد كبير من الشرطات");
+  }
+
+  return {
+    score: Math.min(score, 100),
+    reasons
+  };
+}
+
+
+function getRiskLevel(score) {
+
+  if (score >= 80) {
+    return {
+      text: "🔴 حرج",
+      type: "danger"
+    };
+  }
+
+  if (score >= 60) {
+    return {
+      text: "🟠 مرتفع",
+      type: "danger"
+    };
+  }
+
+  if (score >= 40) {
+    return {
+      text: "🟡 متوسط",
+      type: "warning"
+    };
+  }
+
+  return {
+    text: "🟢 منخفض",
+    type: "safe"
+  };
+}
+
+
 async function analyzeURL(){
 
-const input=document.getElementById("urlInput");
-const result=document.getElementById("result");
+  const input = document.getElementById("urlInput");
+  const result = document.getElementById("result");
 
-let value=input.value.trim();
+  let value = input.value.trim();
 
-if(!value){
-result.className="result warning";
-result.style.display="block";
-result.innerHTML=
-"<h2>⚠️ أدخل رابطًا أولًا</h2>"+
-"<p>ضع الرابط في الخانة ثم اضغط فحص الرابط.</p>";
-return;
+  if(!value){
+    result.className = "result warning";
+    result.style.display = "block";
+    result.innerHTML =
+      "<h2>⚠️ أدخل رابطًا أولًا</h2>" +
+      "<p>ضع الرابط في الخانة ثم اضغط فحص الرابط.</p>";
+    return;
+  }
+
+  let testURL = value;
+
+  if(!/^https?:\/\//i.test(testURL)){
+    testURL = "https://" + testURL;
+  }
+
+  try{
+    new URL(testURL);
+  }catch(e){
+    result.className = "result danger";
+    result.style.display = "block";
+    result.innerHTML =
+      "<h2>❌ الرابط غير صالح</h2>" +
+      "<p>تأكد من كتابة الرابط بطريقة صحيحة.</p>";
+    return;
+  }
+
+  // رقم فحص جديد لمنع نتيجة فحص قديم من تغيير الشاشة
+  const scanId = Date.now() + Math.random();
+  window.LCScanId = scanId;
+
+  // التحليل المحلي يظهر فورًا
+  const localRisk = analyzeRisk(testURL);
+  const localLevel = getRiskLevel(localRisk.score);
+
+  const localReasons =
+    localRisk.reasons.length
+      ? localRisk.reasons
+          .map(reason => "<li>" + reason + "</li>")
+          .join("")
+      : "<li>لا توجد مؤشرات محلية واضحة.</li>";
+
+  result.className =
+    "result " + localLevel.type;
+
+  result.style.display = "block";
+
+  result.innerHTML =
+    "<h2>" +
+    (localRisk.score >= 40
+      ? "🟡 توجد مؤشرات تستحق الحذر"
+      : "🟢 التحليل المحلي مكتمل") +
+    "</h2>" +
+
+    "<p>تم تحليل خصائص الرابط بسرعة، ويجري الآن فحص VirusTotal في الخلفية.</p>" +
+
+    "<div style='font-size:32px;font-weight:bold;margin:15px 0'>" +
+    localRisk.score +
+    "/100" +
+    "</div>" +
+
+    "<p><b>مستوى الخطورة: " +
+    localLevel.text +
+    "</b></p>" +
+
+    "<hr>" +
+
+    "<h3>🔎 أسباب درجة الخطورة</h3>" +
+
+    "<ul>" +
+    localReasons +
+    "</ul>" +
+
+    "<p style='font-size:13px;opacity:.8'>" +
+    "⏳ يتم تحديث النتيجة تلقائيًا عند وصول نتيجة VirusTotal." +
+    "</p>";
+
+  // فحص VirusTotal في الخلفية بدون تعطيل النتيجة المحلية
+  (async function(){
+
+    try{
+
+      const controller = new AbortController();
+
+      const timeout = setTimeout(() => {
+        controller.abort();
+      }, 20000);
+
+      const response = await fetch(
+        "https://lc-backend-7viz.onrender.com/scan",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            url: testURL
+          }),
+          signal: controller.signal
+        }
+      );
+
+      clearTimeout(timeout);
+
+      const data = await response.json();
+
+      if(!response.ok){
+        throw new Error(
+          data.error || "فشل إرسال الرابط للفحص"
+        );
+      }
+
+      const analysisId =
+        data.data && data.data.id;
+
+      if(!analysisId){
+        throw new Error("لم يتم الحصول على رقم التحليل");
+      }
+
+      let analysis = null;
+
+      // الانتظار في الخلفية
+      for(let i = 0; i < 12; i++){
+
+        await new Promise(resolve =>
+          setTimeout(resolve, 3000)
+        );
+
+        if(window.LCScanId !== scanId){
+          return;
+        }
+
+        const check = await fetch(
+          "https://lc-backend-7viz.onrender.com/scan/" +
+          encodeURIComponent(analysisId)
+        );
+
+        const checkData = await check.json();
+
+        if(!check.ok){
+          throw new Error(
+            checkData.error ||
+            "تعذر الحصول على نتيجة التحليل"
+          );
+        }
+
+        analysis = checkData.data;
+
+        if(
+          analysis &&
+          analysis.attributes &&
+          analysis.attributes.status === "completed"
+        ){
+          break;
+        }
+      }
+
+      // إذا لم تكتمل VT، نترك النتيجة المحلية كما هي
+      if(
+        !analysis ||
+        !analysis.attributes ||
+        analysis.attributes.status !== "completed"
+      ){
+        return;
+      }
+
+      if(window.LCScanId !== scanId){
+        return;
+      }
+
+      const stats =
+        analysis.attributes.stats || {};
+
+      const malicious =
+        Number(stats.malicious || 0);
+
+      const suspicious =
+        Number(stats.suspicious || 0);
+
+      const harmless =
+        Number(stats.harmless || 0);
+
+      const undetected =
+        Number(stats.undetected || 0);
+
+      const detections =
+        malicious + suspicious;
+
+      const total =
+        malicious +
+        suspicious +
+        harmless +
+        undetected;
+
+      let vtScore = 0;
+      const finalReasons = [...localRisk.reasons];
+
+      if(malicious > 0){
+
+        vtScore = 60;
+
+        finalReasons.push(
+          "VirusTotal اكتشف مؤشرات ضارة"
+        );
+
+      }else if(suspicious > 0){
+
+        vtScore = 30;
+
+        finalReasons.push(
+          "VirusTotal اكتشف مؤشرات مشبوهة"
+        );
+      }
+
+      const riskScore =
+        Math.min(
+          100,
+          Math.max(localRisk.score, vtScore)
+        );
+
+      const level =
+        getRiskLevel(riskScore);
+
+      let title;
+      let message;
+
+      if(malicious > 0){
+
+        title = "🔴 الرابط قد يكون خطيرًا";
+
+        message =
+          "اكتشفت محركات فحص مؤشرات ضارة في الرابط.";
+
+      }else if(suspicious > 0){
+
+        title = "🟠 الرابط مشبوه";
+
+        message =
+          "اكتشفت محركات فحص مؤشرات تستحق الحذر.";
+
+      }else if(riskScore >= 40){
+
+        title = "🟡 توجد مؤشرات تستحق الحذر";
+
+        message =
+          "تحليل خصائص الرابط أظهر بعض المؤشرات المشبوهة.";
+
+      }else{
+
+        title = "🟢 لم يتم اكتشاف تهديد";
+
+        message =
+          "لم تكتشف محركات الفحص المتاحة مؤشرات ضارة، ودرجة المؤشرات المحلية منخفضة.";
+
+      }
+
+      const reasonText =
+        finalReasons.length
+          ? finalReasons
+              .map(reason => "<li>" + reason + "</li>")
+              .join("")
+          : "<li>لا توجد مؤشرات واضحة.</li>";
+
+      result.className =
+        "result " + level.type;
+
+      result.innerHTML =
+        "<h2>" + title + "</h2>" +
+        "<p>" + message + "</p>" +
+
+        "<div style='font-size:32px;font-weight:bold;margin:15px 0'>" +
+        riskScore +
+        "/100" +
+        "</div>" +
+
+        "<p><b>مستوى الخطورة: " +
+        level.text +
+        "</b></p>" +
+
+        "<p><b>الاكتشافات: " +
+        detections +
+        " من " +
+        total +
+        "</b></p>" +
+
+        "<p>ضار: " +
+        malicious +
+        " | مشبوه: " +
+        suspicious +
+        " | سليم: " +
+        harmless +
+        " | غير مكتشف: " +
+        undetected +
+        "</p>" +
+
+        "<hr>" +
+
+        "<h3>🔎 أسباب درجة الخطورة</h3>" +
+
+        "<ul>" +
+        reasonText +
+        "</ul>" +
+
+        "<p style='font-size:13px;opacity:.8'>" +
+        "درجة الخطورة تقديرية وتعتمد على مؤشرات الرابط ونتائج VirusTotal، ولا تُعد حكمًا نهائيًا على أمان الرابط." +
+        "</p>";
+
+    }catch(error){
+
+      // لا نحذف النتيجة المحلية إذا تأخر أو تعذر VirusTotal
+      if(window.LCScanId !== scanId){
+        return;
+      }
+
+      result.innerHTML +=
+        "<p style='font-size:13px;opacity:.8'>" +
+        "ℹ️ تعذر إكمال فحص VirusTotal حاليًا، لكن نتيجة التحليل المحلي ما زالت ظاهرة." +
+        "</p>";
+    }
+
+  })();
+
 }
-
-let testURL=value;
-
-if(!/^https?:\/\//i.test(testURL)){
-testURL="https://"+testURL;
-}
-
-try{
-new URL(testURL);
-}catch(e){
-result.className="result danger";
-result.style.display="block";
-result.innerHTML=
-"<h2>❌ الرابط غير صالح</h2>"+
-"<p>تأكد من كتابة الرابط بطريقة صحيحة.</p>";
-return;
-}
-
-result.className="result warning";
-result.style.display="block";
-result.innerHTML=
-"<h2>🔍 جاري التحليل...</h2>"+
-"<p>يتم فحص الرابط بواسطة VirusTotal.</p>";
-
-try{
-
-const response=await fetch("https://lc-backend-7viz.onrender.com/scan",{
-method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({url:testURL})
-});
-
-const data=await response.json();
-
-if(!response.ok){
-throw new Error(data.error || "فشل إرسال الرابط للفحص");
-}
-
-const analysisId=data.data && data.data.id;
-
-if(!analysisId){
-throw new Error("لم يتم الحصول على رقم التحليل");
-}
-
-let analysis=null;
-
-for(let i=0;i<12;i++){
-
-await new Promise(resolve=>setTimeout(resolve,5000));
-
-const check=await fetch(
- "https://lc-backend-7viz.onrender.com/scan/"+encodeURIComponent(analysisId)
-);
-
-const checkData=await check.json();
-
-if(!check.ok){
-throw new Error(
-checkData.error || "تعذر الحصول على نتيجة التحليل"
-);
-}
-
-analysis=checkData.data;
-
-if(
-analysis &&
-analysis.attributes &&
-analysis.attributes.status==="completed"
-){
-break;
-}
-
-result.innerHTML=
-"<h2>🔄 جاري التحليل...</h2>"+
-"<p>VirusTotal ما زال يفحص الرابط.</p>"+
-"<p>انتظر قليلًا...</p>";
-}
-
-if(
-!analysis ||
-!analysis.attributes ||
-analysis.attributes.status!=="completed"
-){
-throw new Error("انتهى وقت الانتظار قبل اكتمال التحليل");
-}
-
-const stats=analysis.attributes.stats || {};
-
-const malicious=Number(stats.malicious||0);
-const suspicious=Number(stats.suspicious||0);
-const harmless=Number(stats.harmless||0);
-const undetected=Number(stats.undetected||0);
-
-const detections=malicious+suspicious;
-const total=malicious+suspicious+harmless+undetected;
-
-let title;
-let type;
-let message;
-
-if(malicious>0){
-
-type="danger";
-title="🔴 الرابط قد يكون خطيرًا";
-message="اكتشفت بعض محركات الفحص مؤشرات ضارة في الرابط.";
-
-}else if(suspicious>0){
-
-type="warning";
-title="🟠 الرابط مشبوه";
-message="اكتشفت محركات الفحص مؤشرات تستحق الحذر.";
-
-}else{
-
-type="safe";
-title="🟢 لم يتم اكتشاف تهديد";
-message="لم تكتشف محركات الفحص المتاحة مؤشرات ضارة أو مشبوهة.";
-
-}
-
-result.className="result "+type;
-result.innerHTML=
-"<h2>"+title+"</h2>"+
-"<p>"+message+"</p>"+
-"<p><b>الاكتشافات: "+detections+" من "+total+"</b></p>"+
-"<p>ضار: "+malicious+
-" | مشبوه: "+suspicious+
-" | سليم: "+harmless+
-" | غير مكتشف: "+undetected+"</p>";
-
-}catch(error){
-
-result.className="result danger";
-result.innerHTML=
-"<h2>❌ حدث خطأ أثناء الفحص</h2>"+
-"<p>"+error.message+"</p>";
-
-}
-
-}
-
 </script>
 
 </body>
