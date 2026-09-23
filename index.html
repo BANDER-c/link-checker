@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LC | التحقق من أمان الروابط</title>
+<title>Cyber Link Analyzer | محلل الروابط السيبراني</title>
 
 <style>
 *{box-sizing:border-box}
@@ -352,6 +352,7 @@ height:43px;
 }
 }
 </style>
+    <script src="https://unpkg.com/@zxing/browser@0.2.1/umd/zxing-browser.min.js"></script>
 </head>
 
 <body>
@@ -435,7 +436,7 @@ autocomplete="off"
 </section>
 
 <div class="footer">
-LC — Link Check<br>
+Cyber Link Analyzer | محلل الروابط السيبراني<br>
 نتيجة الفحص تقديرية ولا تُعد ضمانًا نهائيًا لأمان الرابط.
 </div>
 
@@ -456,154 +457,115 @@ themeBtn.textContent=document.body.classList.contains("dark")?"☀️":"🌙";
 
 
 function analyzeRisk(url) {
-
-  const reasons = [];
-  let score = 0;
-
-  let parsed;
-
   try {
-    parsed = new URL(url);
-  } catch {
-    return {
-      score: 100,
-      reasons: ["الرابط غير صالح"]
-    };
+    if (
+      typeof window !== "undefined" &&
+      window.CyberLinkAnalyzer &&
+      typeof window.CyberLinkAnalyzer.analyzeURL === "function"
+    ) {
+      const local = window.CyberLinkAnalyzer.analyzeURL(url);
+
+      let brandResult = null;
+
+      if (
+        window.CyberLinkBrandDetector &&
+        typeof window.CyberLinkBrandDetector.detectBrandImpersonation === "function"
+      ) {
+        brandResult =
+          window.CyberLinkBrandDetector.detectBrandImpersonation(url);
+      }
+
+      const indicators = Array.isArray(local.indicators)
+        ? [...local.indicators]
+        : [];
+
+      if (
+        brandResult &&
+        brandResult.detected &&
+        !brandResult.official
+      ) {
+        indicators.push({
+          id: "brand-similarity",
+          title: "تشابه محتمل مع علامة معروفة",
+          description: brandResult.message,
+          weight: 10,
+          severity: "medium",
+          detected: true,
+          brand: brandResult.brand,
+          similarity: brandResult.similarity
+        });
+      }
+
+      const score = Math.min(
+        indicators.reduce(
+          (total, indicator) =>
+            total + Number(indicator.weight || 0),
+          0
+        ),
+        100
+      );
+
+      const reasons = indicators.map(indicator => {
+        let text = indicator.description || indicator.title;
+
+        if (indicator.weight) {
+          text += " (+" + indicator.weight + ")";
+        }
+
+        return text;
+      });
+
+      return {
+        ...local,
+        score,
+        reasons,
+        indicators,
+        brandResult
+      };
+    }
+  } catch (error) {
+    console.warn("V2 analyzer failed:", error);
   }
 
-  const hostname = parsed.hostname.toLowerCase();
-  const fullUrl = url.toLowerCase();
-
-  // استخدام HTTP غير المشفر
-  if (parsed.protocol === "http:") {
-    score += 5;
-    reasons.push("الرابط يستخدم HTTP غير المشفر");
-  }
-
-  // استخدام IP بدل اسم نطاق
-  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(hostname)) {
-    score += 20;
-    reasons.push("يستخدم عنوان IP بدل اسم نطاق");
-  }
-
-  // Punycode
-  if (hostname.includes("xn--")) {
-    score += 20;
-    reasons.push("النطاق يستخدم Punycode");
-  }
-
-  // الرمز @
-  if (fullUrl.includes("@")) {
-    score += 15;
-    reasons.push("الرابط يحتوي على الرمز @");
-  }
-
-  // طول الرابط
-  if (url.length > 120) {
-    score += 10;
-    reasons.push("الرابط طويل بشكل غير معتاد");
-  }
-
-  // كثرة النطاقات الفرعية
-  const parts = hostname.split(".");
-  if (parts.length >= 5) {
-    score += 10;
-    reasons.push("يحتوي على عدد كبير من النطاقات الفرعية");
-  }
-
-  // كلمات قد تظهر في صفحات التصيد
-  const suspiciousWords = [
-    "login",
-    "verify",
-    "verification",
-    "secure",
-    "account",
-    "password",
-    "signin",
-    "update",
-    "confirm"
-  ];
-
-  const foundWords = suspiciousWords.filter(word =>
-    fullUrl.includes(word)
-  );
-
-  if (foundWords.length > 0) {
-    score += Math.min(foundWords.length * 5, 15);
-
-    reasons.push(
-      "يحتوي على كلمات قد تُستخدم في صفحات التصيد: " +
-      foundWords.join(", ")
-    );
-  }
-
-  // أنماط شائعة لانتحال أسماء العلامات التجارية
-  const impersonationPatterns = [
-    "goog1e",
-    "g00gle",
-    "micros0ft",
-    "micr0soft",
-    "paypa1",
-    "faceb00k",
-    "app1e"
-  ];
-
-  const foundImpersonation = impersonationPatterns.find(pattern =>
-    hostname.includes(pattern)
-  );
-
-  if (foundImpersonation) {
-    score += 40;
-
-    reasons.push(
-      "النطاق يحتوي على نمط قد يشير إلى انتحال اسم علامة تجارية"
-    );
-  }
-
-  // كثرة الشرطات
-  const hyphens = (hostname.match(/-/g) || []).length;
-
-  if (hyphens >= 4) {
-    score += 10;
-    reasons.push("النطاق يحتوي على عدد كبير من الشرطات");
-  }
-
+  // Fallback إلى المحلل القديم إذا تعذر تشغيل المحلل الجديد.
   return {
-    score: Math.min(score, 100),
-    reasons
+    score: 0,
+    reasons: ["تعذر تشغيل محرك التحليل الجديد."],
+    indicators: []
   };
 }
-
 
 function getRiskLevel(score) {
-
-  if (score >= 80) {
+  if (score >= 75) {
     return {
-      text: "🔴 حرج",
-      type: "danger"
+      level: "critical",
+      title: "🔴 درجة اشتباه حرجة",
+      message: "تم اكتشاف عدة مؤشرات تستحق الحذر الشديد."
     };
   }
 
-  if (score >= 60) {
+  if (score >= 50) {
     return {
-      text: "🟠 مرتفع",
-      type: "danger"
+      level: "high",
+      title: "🟠 درجة اشتباه مرتفعة",
+      message: "تم اكتشاف مؤشرات متعددة تستحق التحقق قبل فتح الرابط."
     };
   }
 
-  if (score >= 40) {
+  if (score >= 25) {
     return {
-      text: "🟡 متوسط",
-      type: "warning"
+      level: "medium",
+      title: "🟡 درجة اشتباه متوسطة",
+      message: "تم اكتشاف بعض المؤشرات التي تستحق المراجعة."
     };
   }
 
   return {
-    text: "🟢 منخفض",
-    type: "safe"
+    level: "low",
+    title: "🟢 درجة اشتباه منخفضة",
+    message: "لم يتم اكتشاف مؤشرات محلية قوية في بنية الرابط."
   };
 }
-
 
 async function analyzeURL(){
 
@@ -936,5 +898,127 @@ async function analyzeURL(){
 }
 </script>
 
+    <script src="analyzer.js"></script>
+    <script src="brand-detector.js"></script>
+    <script src="qr-scanner.js"></script>
+<script src="qr-image.js"></script>
+
+<!-- LC_QR_SECTION -->
+
+<section class="qr-section" id="qrScannerSection">
+  <div class="qr-card">
+
+    <div class="qr-icon">▣</div>
+
+    <h2>فحص رمز QR</h2>
+
+    <p>
+      اختر صورة تحتوي على رمز QR وسيتم قراءة محتواه وعرض النتيجة هنا.
+    </p>
+
+    <input
+      type="file"
+      id="qrImageInput"
+      accept="image/*"
+      hidden
+    >
+
+    <button
+      type="button"
+      id="qrUploadBtn"
+    >
+      📷 اختيار صورة QR
+    </button>
+
+    <div
+      id="qrResult"
+      class="qr-result"
+      style="display:none;"
+    ></div>
+
+  </div>
+</section>
+
+<!-- /LC_QR_SECTION -->
+
 </body>
 </html>
+
+<style>
+/* ===== QR CENTER DESIGN ===== */
+
+#qrScannerSection {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 20px;
+  margin: 20px auto;
+  box-sizing: border-box;
+}
+
+#qrScannerSection .qr-card {
+  width: min(680px, 100%);
+  margin: 0 auto;
+  padding: 36px 28px;
+  text-align: center;
+  border-radius: 24px;
+  box-sizing: border-box;
+}
+
+#qrScannerSection .qr-icon {
+  font-size: 52px;
+  margin-bottom: 12px;
+}
+
+#qrScannerSection h2 {
+  margin: 0 0 12px;
+  font-size: 28px;
+}
+
+#qrScannerSection p {
+  max-width: 560px;
+  margin: 0 auto 25px;
+  line-height: 1.9;
+}
+
+#qrUploadBtn {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 230px;
+  padding: 15px 25px;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+#qrResult {
+  max-width: 560px;
+  margin: 25px auto 0;
+  padding: 16px;
+  border-radius: 14px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 600px) {
+  #qrScannerSection {
+    padding: 40px 14px;
+  }
+
+  #qrScannerSection .qr-card {
+    padding: 28px 18px;
+  }
+
+  #qrScannerSection h2 {
+    font-size: 24px;
+  }
+
+  #qrUploadBtn {
+    width: 100%;
+  }
+}
+</style>
