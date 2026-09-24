@@ -356,17 +356,38 @@ async function analyzeURL(){
         externalScore = 0;
       }
 
+      /*
+       * Final Risk Assessment
+       * الدمج النهائي بين:
+       * - التحليل المحلي: 60%
+       * - نتيجة السمعة الخارجية من VirusTotal: 40%
+       *
+       * لا نستخدم Math.max(localScore, externalScore)
+       * كطريقة الدمج الأساسية حتى لا تقفز النتيجة بشكل مبالغ فيه.
+       */
       let finalRiskScore;
 
-      if (externalScore === 0) {
-        // لا نخفض درجة التحليل المحلي إذا لم تضف VirusTotal مؤشرات ضارة.
-        finalRiskScore = localScore;
+      if (externalScore > 0) {
+        finalRiskScore =
+          (localScore * 0.60) +
+          (externalScore * 0.40);
       } else {
-        // عند وجود نتيجة خارجية، ندمجها مع التحليل المحلي.
-        finalRiskScore = Math.round(
-          (localScore * 0.70) + (externalScore * 0.30)
-        );
+        // عند عدم وجود نتيجة خارجية، نعتمد على التحليل المحلي بالكامل.
+        finalRiskScore = localScore;
       }
+
+      /*
+       * وجود 3 اكتشافات ضارة أو أكثر من VirusTotal
+       * يعتبر دليلًا خارجيًا قويًا، لذلك لا نسمح
+       * بأن تبقى النتيجة تحت مستوى High.
+       */
+      if (malicious >= 3) {
+        finalRiskScore = Math.max(50, finalRiskScore);
+      }
+
+      finalRiskScore = Math.round(
+        Math.max(0, Math.min(100, finalRiskScore))
+      );
 
       const finalLevel = getRiskLevel(finalRiskScore);
 
