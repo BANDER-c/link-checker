@@ -6,8 +6,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<title>Cyber Link Analyzer | محلل الروابط السيبراني
-      <p>نظام متعدد المؤشرات لتحليل الروابط واكتشاف علامات التصيد وانتحال النطاقات قبل فتحها.</p></title>
+<title>Cyber Link Analyzer | محلل الروابط السيبراني</title>
+<meta name="description" content="نظام متعدد المؤشرات لتحليل الروابط واكتشاف علامات التصيد وانتحال النطاقات وروابط QR المشبوهة قبل فتحها.">
 
 <style>
 *{box-sizing:border-box}
@@ -398,204 +398,6 @@ z-index:1;
 }
 </style>
     <script src="https://unpkg.com/@zxing/browser@0.2.1/umd/zxing-browser.min.js"></script>
-</head>
-
-<body>
-
-<div class="container">
-
-<nav class="nav">
-<div class="logo">
-<div class="logo-mark">LC</div>
-<div>
-LC
-<small>LINK CHECK</small>
-</div>
-</div>
-
-<button class="theme-btn" id="themeBtn" type="button" aria-label="تغيير المظهر">🌙</button>
-</nav>
-
-<header class="hero">
-<div class="hero-badge">🛡️ أداة للتحقق من الروابط</div>
-
-<h1>
-تحقق من أمان<br>
-<span>الرابط قبل فتحه</span>
-</h1>
-
-<p>
-حلّل الرابط واكتشف المؤشرات المشبوهة باستخدام
-التحليل المحلي ونتائج VirusTotal.
-</p>
-</header>
-
-<section class="scan-panel">
-
-<div class="scan-label">
-<label for="urlInput">أدخل الرابط</label>
-<span>URL</span>
-</div>
-
-<div class="input-box">
-<input
-id="urlInput"
-type="text"
-placeholder="https://example.com"
-autocomplete="off"
->
-
-<button class="scan-btn" onclick="analyzeURL()">
-🔍 فحص الرابط
-</button>
-</div>
-
-<div class="scan-hint">
-لا تفتح الرابط المشبوه قبل ظهور نتيجة الفحص.
-</div>
-
-<div id="result" class="result"></div>
-
-</section>
-
-<section class="features">
-
-<div class="feature">
-<div class="feature-icon">⚡</div>
-<strong>تحليل سريع</strong>
-<span>تظهر المؤشرات الأولية للرابط مباشرة.</span>
-</div>
-
-<div class="feature">
-<div class="feature-icon">🔎</div>
-<strong>تحليل متعدد المؤشرات</strong>
-<span>فحص خصائص الرابط بحثًا عن علامات مشبوهة.</span>
-</div>
-
-<div class="feature">
-<div class="feature-icon">🛡️</div>
-<strong>VirusTotal</strong>
-<span>تحديث النتيجة عند توفر نتائج الفحص الخارجي.</span>
-</div>
-
-</section>
-
-<div class="footer">
-Cyber Link Analyzer | محلل الروابط السيبراني<br>
-نتيجة الفحص تقديرية ولا تُعد ضمانًا نهائيًا لأمان الرابط.
-</div>
-
-</div>
-
-<script>
-const themeBtn=document.getElementById("themeBtn");
-
-themeBtn.addEventListener("click",function(){
-document.body.classList.toggle("dark");
-themeBtn.textContent=document.body.classList.contains("dark")?"☀️":"🌙";
-});
-</script>
-
-
-
-    <script src="analyzer.js"></script>
-<script src="app.js"></script>
-<script src="data/trusted-brands.js"></script>
-<script src="brand-detector.js"></script>
-<script src="data/test-links.js"></script>
-<script src="test-suite.js"></script>
-    <script src="qr-scanner.js"></script>
-<script src="qr-image.js"></script>
-
-<!-- LC_QR_SECTION -->
-
-
-<section class="qr-section" id="qrScannerSection">
-  <div class="qr-card">
-
-    <div class="qr-icon">▣</div>
-
-    <h2>فحص رمز QR</h2>
-
-    <p>
-      اختر صورة تحتوي على أي رمز QR وسيتم قراءة محتواه وعرض النتيجة هنا.
-    </p>
-
-    <input
-      type="file"
-      id="qrImageInput"
-      accept="image/*"
-      hidden
-    >
-
-    <button
-      type="button"
-      id="qrUploadBtn"
-      style="
-        display:block;
-        width:100%;
-        max-width:420px;
-        margin:20px auto;
-        padding:18px;
-        border:0;
-        border-radius:18px;
-        cursor:pointer;
-        font-size:18px;
-        font-weight:800;
-      "
-    >
-      📷 اختيار صورة QR
-    </button>
-
-    <div
-      id="qrResult"
-      class="qr-result"
-      style="
-        display:none;
-        margin-top:20px;
-        text-align:right;
-      "
-    ></div>
-
-  </div>
-</section>
-
-
-<!-- /LC_QR_SECTION -->
-
-
-<section id="howItWorksSection" style="margin-top:24px;">
-  <div class="panel">
-    <h2>ℹ️ كيف يعمل النظام</h2>
-    <p>
-      يعمل Cyber Link Analyzer على تحليل خصائص الرابط قبل فتحه،
-      ثم يجمع المؤشرات المحلية مع نتيجة السمعة الخارجية عند استخدام VirusTotal.
-    </p>
-
-    <ol>
-      <li><strong>إدخال الرابط:</strong> يتم التحقق من أن الرابط صالح ويستخدم HTTP أو HTTPS.</li>
-      <li><strong>التحليل المحلي:</strong> يفحص النظام خصائص مثل البروتوكول، عنوان IP، بيانات الدخول، Punycode، Unicode، طول الرابط، النطاقات الفرعية والمنافذ.</li>
-      <li><strong>المؤشرات المشبوهة:</strong> يبحث عن الكلمات المشبوهة، معاملات إعادة التوجيه، الترميز غير المعتاد والروابط المختصرة.</li>
-      <li><strong>انتحال العلامات:</strong> يقارن اسم النطاق مع مجموعة من العلامات المعروفة لاكتشاف التشابه المحتمل.</li>
-      <li><strong>VirusTotal:</strong> يمكن استخدام خدمة VirusTotal للحصول على تحليل خارجي إضافي لسمعة الرابط.</li>
-      <li><strong>تقييم الخطورة:</strong> يتم فصل درجة التحليل المحلي عن نتيجة السمعة الخارجية ثم حساب التقييم النهائي.</li>
-      <li><strong>عرض النتيجة:</strong> تظهر درجة الخطورة والمؤشرات المكتشفة وأسباب النتيجة والتوصية بعدم فتح الرابط قبل التحقق من مصدره.</li>
-    </ol>
-
-    <p>
-      <strong>تنبيه:</strong>
-      هذه الأداة تقدم تحليلًا استدلاليًا ولا تمثل حكمًا قطعيًا على سلامة الموقع.
-    </p>
-
-    <p>
-      لا يقوم التحليل المحلي بفتح الرابط أو تحميل محتواه أو تشغيله.
-    </p>
-  </div>
-</section>
-
-<section id="systemTestSection" style="max-width:1100px;margin:40px auto;padding:24px;border-radius:20px;background:rgba(6,27,20,.88);border:1px solid rgba(25,169,116,.35);color:#fff;direction:rtl;"><h2 style="margin-top:0">📊 اختبار النظام</h2><p>اختبارات اصطناعية للتأكد من أن محلل الروابط يتعامل مع الحالات المختلفة كما هو متوقع.</p><button id="runSystemTestsBtn" type="button" style="padding:12px 20px;border:0;border-radius:12px;cursor:pointer;">تشغيل الاختبارات</button><div id="systemTestSummary" style="margin-top:20px"></div><div id="systemTestMetrics" style="margin-top:16px"></div><div id="systemTestResults" style="margin-top:20px;overflow-x:auto"></div></section><script>(function(){const btn=document.getElementById('runSystemTestsBtn');if(!btn)return;btn.addEventListener('click',function(){const summary=document.getElementById('systemTestSummary');const metrics=document.getElementById('systemTestMetrics');const resultsBox=document.getElementById('systemTestResults');try{const tests=window.CyberLinkTestLinks;const analyzer=window.CyberLinkAnalyzer;const brandDetector=window.CyberLinkBrandDetector;const suite=window.CyberLinkTestSuite;if(!tests||!analyzer||!brandDetector||!suite)throw new Error('تعذر تحميل ملفات الاختبار المطلوبة.');const report=suite.runTests(tests,analyzer,brandDetector);const passed=report.results.filter(x=>x.passed).length;const failed=report.results.length-passed;summary.textContent='النتيجة: '+passed+' / '+report.results.length+' ناجحة'+(failed?' — '+failed+' فاشلة':'');const m=report.metrics;metrics.textContent='Accuracy: '+((m.accuracy||0)*100).toFixed(1)+'% | Precision: '+((m.precision||0)*100).toFixed(1)+'% | Recall: '+((m.recall||0)*100).toFixed(1)+'% | F1: '+((m.f1||0)*100).toFixed(1)+'% | TP: '+m.TP+' | TN: '+m.TN+' | FP: '+m.FP+' | FN: '+m.FN;let html='<table style="width:100%;border-collapse:collapse;margin-top:10px"><thead><tr><th>الرابط</th><th>المتوقع</th><th>المكتشف</th><th>النتيجة</th></tr></thead><tbody>';report.results.forEach(x=>{html+='<tr><td>'+String(x.url).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</td><td>'+x.expected+'</td><td>'+x.detected+'</td><td>'+(x.passed?'نجح':'فشل')+'</td></tr>';});html+='</tbody></table>';resultsBox.innerHTML=html;}catch(e){summary.textContent='خطأ: '+e.message;metrics.textContent='';resultsBox.textContent='';}});})();</script></body>
-</html>
-
 <style>
 /* ===== QR CENTER DESIGN ===== */
 
@@ -674,3 +476,300 @@ themeBtn.textContent=document.body.classList.contains("dark")?"☀️":"🌙";
   }
 }
 </style>
+
+<style id="lc-tabs-style">
+.lc-tabs{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin:24px auto;
+  max-width:1100px;
+  direction:rtl;
+}
+
+.lc-tab{
+  border:1px solid rgba(25,169,116,.30);
+  background:rgba(255,255,255,.05);
+  color:inherit;
+  border-radius:16px;
+  padding:14px 10px;
+  font-family:inherit;
+  font-size:15px;
+  font-weight:800;
+  cursor:pointer;
+  transition:.2s ease;
+}
+
+.lc-tab:hover{
+  transform:translateY(-2px);
+  border-color:#19a974;
+}
+
+.lc-tab.active{
+  background:linear-gradient(135deg,#0b3d2e,#19a974);
+  color:#fff;
+  border-color:#19a974;
+  box-shadow:0 8px 25px rgba(25,169,116,.18);
+}
+
+.lc-page-section{
+  display:none !important;
+}
+
+.lc-page-section.active{
+  display:block !important;
+  animation:lcFade .2s ease;
+}
+
+@keyframes lcFade{
+  from{opacity:0;transform:translateY(5px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+@media(max-width:700px){
+  .lc-tabs{
+    grid-template-columns:repeat(2,1fr);
+    gap:8px;
+  }
+
+  .lc-tab{
+    font-size:13px;
+    padding:12px 7px;
+  }
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<nav class="nav">
+<div class="logo">
+<div class="logo-mark">LC</div>
+<div>
+LC
+<small>LINK CHECK</small>
+</div>
+</div>
+
+<button class="theme-btn" id="themeBtn" type="button" aria-label="تغيير المظهر">🌙</button>
+</nav>
+
+<header class="hero">
+<div class="hero-badge">🛡️ أداة للتحقق من الروابط</div>
+
+<h1>
+تحقق من أمان<br>
+<span>الرابط قبل فتحه</span>
+</h1>
+
+<p>
+نظام متعدد المؤشرات لتحليل الروابط واكتشاف علامات التصيد وانتحال النطاقات قبل فتحها.
+</p>
+</header>
+
+<nav class="lc-tabs" aria-label="أقسام الموقع">
+  <button class="lc-tab active" data-section="scanPanelSection" type="button">🔗 تحليل الرابط</button>
+  <button class="lc-tab" data-section="qrScannerSection" type="button">📷 تحليل QR</button>
+  <button class="lc-tab" data-section="systemTestSection" type="button">📊 اختبار النظام</button>
+  <button class="lc-tab" data-section="howItWorksSection" type="button">ℹ️ كيف يعمل النظام</button>
+</nav>
+
+<section id="scanPanelSection" class="lc-page-section active">
+
+<section class="scan-panel">
+
+<div class="scan-label">
+<label for="urlInput">أدخل الرابط</label>
+<span>URL</span>
+</div>
+
+<div class="input-box">
+<input
+id="urlInput"
+type="text"
+placeholder="https://example.com"
+autocomplete="off"
+>
+
+<button class="scan-btn" onclick="analyzeURL()">
+🔍 فحص الرابط
+</button>
+</div>
+
+<div class="scan-hint">
+لا تفتح الرابط المشبوه قبل ظهور نتيجة الفحص.
+</div>
+
+<div id="result" class="result"></div>
+
+</section>
+
+<section class="features">
+
+<div class="feature">
+<div class="feature-icon">⚡</div>
+<strong>تحليل سريع</strong>
+<span>تظهر المؤشرات الأولية للرابط مباشرة.</span>
+</div>
+
+<div class="feature">
+<div class="feature-icon">🔎</div>
+<strong>تحليل متعدد المؤشرات</strong>
+<span>فحص خصائص الرابط بحثًا عن علامات مشبوهة.</span>
+</div>
+
+<div class="feature">
+<div class="feature-icon">🛡️</div>
+<strong>VirusTotal</strong>
+<span>تحديث النتيجة عند توفر نتائج الفحص الخارجي.</span>
+</div>
+
+</section>
+
+<div class="footer">
+Cyber Link Analyzer | محلل الروابط السيبراني<br>
+نتيجة الفحص تقديرية ولا تُعد ضمانًا نهائيًا لأمان الرابط.
+</div>
+
+</div>
+
+<script>
+const themeBtn=document.getElementById("themeBtn");
+
+themeBtn.addEventListener("click",function(){
+document.body.classList.toggle("dark");
+themeBtn.textContent=document.body.classList.contains("dark")?"☀️":"🌙";
+});
+</script>
+
+
+
+    <script src="analyzer.js"></script>
+<script src="app.js"></script>
+<script src="data/trusted-brands.js"></script>
+<script src="brand-detector.js"></script>
+<script src="data/test-links.js"></script>
+<script src="test-suite.js"></script>
+    <script src="qr-scanner.js"></script>
+<script src="qr-image.js"></script>
+
+</section>
+<!-- /scanPanelSection -->
+
+<!-- LC_QR_SECTION -->
+
+
+<section class="qr-section lc-page-section" id="qrScannerSection">
+  <div class="qr-card">
+
+    <div class="qr-icon">▣</div>
+
+    <h2>فحص رمز QR</h2>
+
+    <p>
+      اختر صورة تحتوي على أي رمز QR وسيتم قراءة محتواه وعرض النتيجة هنا.
+    </p>
+
+    <input
+      type="file"
+      id="qrImageInput"
+      accept="image/*"
+      hidden
+    >
+
+    <button
+      type="button"
+      id="qrUploadBtn"
+      style="
+        display:block;
+        width:100%;
+        max-width:420px;
+        margin:20px auto;
+        padding:18px;
+        border:0;
+        border-radius:18px;
+        cursor:pointer;
+        font-size:18px;
+        font-weight:800;
+      "
+    >
+      📷 اختيار صورة QR
+    </button>
+
+    <div
+      id="qrResult"
+      class="qr-result"
+      style="
+        display:none;
+        margin-top:20px;
+        text-align:right;
+      "
+    ></div>
+
+  </div>
+</section>
+
+
+<!-- /LC_QR_SECTION -->
+
+
+<section id="howItWorksSection" class="lc-page-section" style="margin-top:24px;">
+  <div class="panel">
+    <h2>ℹ️ كيف يعمل النظام</h2>
+    <p>
+      يعمل Cyber Link Analyzer على تحليل خصائص الرابط قبل فتحه،
+      ثم يجمع المؤشرات المحلية مع نتيجة السمعة الخارجية عند استخدام VirusTotal.
+    </p>
+
+    <ol>
+      <li><strong>إدخال الرابط:</strong> يتم التحقق من أن الرابط صالح ويستخدم HTTP أو HTTPS.</li>
+      <li><strong>التحليل المحلي:</strong> يفحص النظام خصائص مثل البروتوكول، عنوان IP، بيانات الدخول، Punycode، Unicode، طول الرابط، النطاقات الفرعية والمنافذ.</li>
+      <li><strong>المؤشرات المشبوهة:</strong> يبحث عن الكلمات المشبوهة، معاملات إعادة التوجيه، الترميز غير المعتاد والروابط المختصرة.</li>
+      <li><strong>انتحال العلامات:</strong> يقارن اسم النطاق مع مجموعة من العلامات المعروفة لاكتشاف التشابه المحتمل.</li>
+      <li><strong>VirusTotal:</strong> يمكن استخدام خدمة VirusTotal للحصول على تحليل خارجي إضافي لسمعة الرابط.</li>
+      <li><strong>تقييم الخطورة:</strong> يتم فصل درجة التحليل المحلي عن نتيجة السمعة الخارجية ثم حساب التقييم النهائي.</li>
+      <li><strong>عرض النتيجة:</strong> تظهر درجة الخطورة والمؤشرات المكتشفة وأسباب النتيجة والتوصية بعدم فتح الرابط قبل التحقق من مصدره.</li>
+    </ol>
+
+    <p>
+      <strong>تنبيه:</strong>
+      هذه الأداة تقدم تحليلًا استدلاليًا ولا تمثل حكمًا قطعيًا على سلامة الموقع.
+    </p>
+
+    <p>
+      لا يقوم التحليل المحلي بفتح الرابط أو تحميل محتواه أو تشغيله.
+    </p>
+  </div>
+</section>
+
+<section id="systemTestSection" class="lc-page-section" style="max-width:1100px;margin:40px auto;padding:24px;border-radius:20px;background:rgba(6,27,20,.88);border:1px solid rgba(25,169,116,.35);color:#fff;direction:rtl;"><h2 style="margin-top:0">📊 اختبار النظام</h2><p>اختبارات اصطناعية للتأكد من أن محلل الروابط يتعامل مع الحالات المختلفة كما هو متوقع.</p><button id="runSystemTestsBtn" type="button" style="padding:12px 20px;border:0;border-radius:12px;cursor:pointer;">تشغيل الاختبارات</button><div id="systemTestSummary" style="margin-top:20px"></div><div id="systemTestMetrics" style="margin-top:16px"></div><div id="systemTestResults" style="margin-top:20px;overflow-x:auto"></div></section><script>(function(){const btn=document.getElementById('runSystemTestsBtn');if(!btn)return;btn.addEventListener('click',function(){const summary=document.getElementById('systemTestSummary');const metrics=document.getElementById('systemTestMetrics');const resultsBox=document.getElementById('systemTestResults');try{const tests=window.CyberLinkTestLinks;const analyzer=window.CyberLinkAnalyzer;const brandDetector=window.CyberLinkBrandDetector;const suite=window.CyberLinkTestSuite;if(!tests||!analyzer||!brandDetector||!suite)throw new Error('تعذر تحميل ملفات الاختبار المطلوبة.');const report=suite.runTests(tests,analyzer,brandDetector);const passed=report.results.filter(x=>x.passed).length;const failed=report.results.length-passed;summary.textContent='النتيجة: '+passed+' / '+report.results.length+' ناجحة'+(failed?' — '+failed+' فاشلة':'');const m=report.metrics;metrics.textContent='Accuracy: '+((m.accuracy||0)*100).toFixed(1)+'% | Precision: '+((m.precision||0)*100).toFixed(1)+'% | Recall: '+((m.recall||0)*100).toFixed(1)+'% | F1: '+((m.f1||0)*100).toFixed(1)+'% | TP: '+m.TP+' | TN: '+m.TN+' | FP: '+m.FP+' | FN: '+m.FN;let html='<table style="width:100%;border-collapse:collapse;margin-top:10px"><thead><tr><th>الرابط</th><th>المتوقع</th><th>المكتشف</th><th>النتيجة</th></tr></thead><tbody>';report.results.forEach(x=>{html+='<tr><td>'+String(x.url).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</td><td>'+x.expected+'</td><td>'+x.detected+'</td><td>'+(x.passed?'نجح':'فشل')+'</td></tr>';});html+='</tbody></table>';resultsBox.innerHTML=html;}catch(e){summary.textContent='خطأ: '+e.message;metrics.textContent='';resultsBox.textContent='';}});})();</script>
+<script id="lc-tabs-script">
+(function(){
+  const tabs = document.querySelectorAll(".lc-tab");
+  const sections = document.querySelectorAll(".lc-page-section");
+
+  tabs.forEach(function(tab){
+    tab.addEventListener("click", function(){
+      const targetId = tab.getAttribute("data-section");
+
+      tabs.forEach(function(item){
+        item.classList.toggle("active", item === tab);
+      });
+
+      sections.forEach(function(section){
+        section.classList.toggle("active", section.id === targetId);
+      });
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    });
+  });
+})();
+</script>
+
+</body>

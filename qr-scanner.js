@@ -23,7 +23,7 @@ function processQRContent(content) {
     return {
       success: false,
       type: "empty",
-      message: "تعذر اكتشاف محتوى داخل QR."
+      message: "تعذر اكتشاف QR في الصورة."
     };
   }
 

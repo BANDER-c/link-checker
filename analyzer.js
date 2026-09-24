@@ -207,6 +207,21 @@
 
     const indicators = [];
     const hostname = parsed.hostname.toLowerCase();
+  if (!hostname) {
+    return {
+      valid: false,
+      score: 100,
+      level: "critical",
+      indicators: [{
+        id: "missing-host",
+        title: "اسم نطاق غير موجود",
+        description: "تعذر العثور على اسم نطاق صالح داخل الرابط.",
+        weight: 100,
+        severity: "high",
+        detected: true
+      }]
+    };
+  }
     const pathnameAndQuery = parsed.pathname + parsed.search;
 
     function add(id, title, description, weight, severity) {

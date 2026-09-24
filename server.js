@@ -8,13 +8,63 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
+function validateScanURL(value) {
+  if (typeof value !== "string") {
+    return { valid: false, message: "الرابط يجب أن يكون نصًا." };
+  }
+
+  const input = value.trim();
+
+  if (!input || input.length > 8192) {
+    return { valid: false, message: "الرابط فارغ أو طويل جدًا." };
+  }
+
+  try {
+    const parsed = new URL(input);
+
+    if (
+      parsed.protocol !== "http:" &&
+      parsed.protocol !== "https:"
+    ) {
+      return {
+        valid: false,
+        message: "يسمح فقط بروابط HTTP وHTTPS."
+      };
+    }
+
+    if (!parsed.hostname) {
+      return {
+        valid: false,
+        message: "اسم النطاق غير موجود."
+      };
+    }
+
+    return {
+      valid: true,
+      url: parsed.href
+    };
+  } catch {
+    return {
+      valid: false,
+      message: "الرابط غير صالح."
+    };
+  }
+}
+
+
 app.post("/scan", async (req, res) => {
   try {
     const { url } = req.body;
 
-    if (!url) {
-      return res.status(400).json({ error: "الرابط مطلوب" });
+    const validation = validateScanURL(url);
+
+    if (!validation.valid) {
+      return res.status(400).json({
+        error: validation.message
+      });
     }
+
+    const safeURL = validation.url;
 
     const apiKey = process.env.VT_API_KEY || "";
 
@@ -32,7 +82,7 @@ app.post("/scan", async (req, res) => {
           "x-apikey": apiKey,
           "Content-Type": "application/x-www-form-urlencoded"
         },
-        body: new URLSearchParams({ url })
+        body: new URLSearchParams({ url: safeURL })
       }
     );
 
