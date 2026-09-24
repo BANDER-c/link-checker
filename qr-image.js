@@ -1,299 +1,134 @@
 (function () {
-  'use strict';
+  "use strict";
+
+  function esc(value) {
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
 
   function initQR() {
+    const input = document.getElementById("qrImageInput");
+    const uploadButton = document.getElementById("qrUploadBtn");
+    const cameraButton = document.getElementById("qrCameraBtn");
+    const stopButton = document.getElementById("qrStopCameraBtn");
+    const video = document.getElementById("qrVideo");
+    const result = document.getElementById("qrResult");
+    if (!input || !uploadButton || !cameraButton || !stopButton || !video || !result) return;
 
-    const input = document.getElementById('qrImageInput');
-    const button = document.getElementById('qrUploadBtn');
-    const result = document.getElementById('qrResult');
+    let cameraReader = null;
+    let cameraControls = null;
+    let cameraRunning = false;
 
-    if (!input || !button || !result) {
-      console.error('LC QR: عناصر QR غير موجودة');
-      return;
+    function showMessage(title, message, type) {
+      result.style.display = "block";
+      result.className = "qr-result " + (type || "");
+      while (result.firstChild) result.removeChild(result.firstChild);
+      const h = document.createElement("h3"); h.textContent = title; result.appendChild(h);
+      const p = document.createElement("p"); p.textContent = message; result.appendChild(p);
     }
 
-    function esc(value) {
-      return String(value || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+    function analyzeExtracted(value) {
+      const processed = window.CyberLinkQRScanner.processQRContent(value);
+      if (!processed.success) { showMessage("❌ QR غير صالح", processed.message, "error"); return; }
+      if (processed.type === "url") {
+        const inputURL = document.getElementById("urlInput");
+        if (inputURL) inputURL.value = processed.value;
+        showMessage("🔗 تم استخراج رابط من QR", "تم استخراج الرابط ولم يتم فتحه تلقائيًا. سيتم تمريره إلى محلل LC.", "success");
+        if (typeof window.analyzeURL === "function") setTimeout(window.analyzeURL, 80);
+        return;
+      }
+      result.style.display = "block";
+      result.className = "qr-result success";
+      while (result.firstChild) result.removeChild(result.firstChild);
+      const h = document.createElement("h3"); h.textContent = "📝 محتوى QR نصي"; result.appendChild(h);
+      const pre = document.createElement("pre"); pre.textContent = processed.value; result.appendChild(pre);
+      const p = document.createElement("p"); p.textContent = "لم يتم فتح أو تنفيذ المحتوى."; result.appendChild(p);
     }
 
-    function show(html, type) {
-      result.style.display = 'block';
-      result.className = 'qr-result ' + (type || '');
-      result.innerHTML = html;
+    function displaySpecialContent(text) {
+      const value = String(text || "").trim();
+      if (/^WIFI:/i.test(value)) {
+        showMessage("📶 QR لشبكة Wi-Fi", "تم استخراج بيانات الشبكة فقط. لم يتم الاتصال بها.", "success");
+        const pre = document.createElement("pre"); pre.textContent = value; result.appendChild(pre); return;
+      }
+      if (/^tel:/i.test(value)) { showMessage("📞 QR يحتوي على رقم هاتف", value.slice(4), "success"); return; }
+      if (/^mailto:/i.test(value)) { showMessage("✉️ QR يحتوي على بريد إلكتروني", value.slice(7), "success"); return; }
+      if (/^BEGIN:VCARD/i.test(value) || /^MECARD:/i.test(value)) { showMessage("👤 QR يحتوي على جهة اتصال", value, "success"); return; }
+      analyzeExtracted(value);
     }
 
-    function displayQR(text) {
-
-      text = String(text || '').trim();
-
-      if (!text) {
-        show(
-          '<h3>❌ لم يتم العثور على محتوى</h3>' +
-          '<p>تعذر اكتشاف QR في الصورة.</p>',
-          'error'
-        );
-        return;
-      }
-
-      /* Wi-Fi */
-      if (/^WIFI:/i.test(text)) {
-
-        const data = {};
-
-        text.substring(5)
-          .split(';')
-          .forEach(function (part) {
-
-            const i = part.indexOf(':');
-
-            if (i !== -1) {
-              data[part.substring(0, i)] =
-                part.substring(i + 1);
-            }
-
-          });
-
-        const network = data.S || 'غير محدد';
-        const password = data.P || 'بدون كلمة مرور';
-        const security = data.T || 'غير محدد';
-        const hidden =
-          data.H === 'true' || data.H === '1'
-            ? 'نعم'
-            : 'لا';
-
-        show(
-          '<h3>📶 رمز شبكة Wi-Fi</h3>' +
-
-          '<div class="qr-info">' +
-
-          '<div>' +
-          '<strong>📡 اسم الشبكة</strong>' +
-          '<span>' + esc(network) + '</span>' +
-          '</div>' +
-
-          '<div>' +
-          '<strong>🔑 كلمة المرور</strong>' +
-          '<span>' + esc(password) + '</span>' +
-          '</div>' +
-
-          '<div>' +
-          '<strong>🔐 نوع الحماية</strong>' +
-          '<span>' + esc(security) + '</span>' +
-          '</div>' +
-
-          '<div>' +
-          '<strong>👁️ الشبكة مخفية</strong>' +
-          '<span>' + hidden + '</span>' +
-          '</div>' +
-
-          '</div>' +
-
-          '<p>⚠️ تم استخراج البيانات فقط ولم يتم الاتصال بالشبكة.</p>',
-          'success'
-        );
-
-        return;
-      }
-
-      /* URL */
-      if (/^https?:\/\//i.test(text)) {
-
-        const urlInput =
-          document.getElementById('urlInput');
-
-        if (urlInput) {
-          urlInput.value = text;
-        }
-
-        show(
-          '<h3>🔗 تم استخراج رابط من QR</h3>' +
-          '<div class="qr-link">' +
-          esc(text) +
-          '</div>' +
-          '<p>🛡️ تم استخراج الرابط من QR ولم يتم فتحه.</p>' +
-          '<p>⏳ سيتم تمرير الرابط إلى محلل LC.</p>',
-          'success'
-        );
-
-        if (typeof window.analyzeURL === 'function') {
-          setTimeout(function () {
-            window.analyzeURL();
-          }, 50);
-        }
-
-        return;
-      }
-
-      /* Phone */
-      if (/^tel:/i.test(text)) {
-
-        show(
-          '<h3>📞 رمز QR يحتوي على رقم هاتف</h3>' +
-          '<div class="qr-link">' +
-          esc(text.replace(/^tel:/i, '')) +
-          '</div>',
-          'success'
-        );
-
-        return;
-      }
-
-      /* Email */
-      if (/^mailto:/i.test(text)) {
-
-        show(
-          '<h3>✉️ رمز QR يحتوي على بريد إلكتروني</h3>' +
-          '<div class="qr-link">' +
-          esc(text.replace(/^mailto:/i, '')) +
-          '</div>',
-          'success'
-        );
-
-        return;
-      }
-
-      /* Contact */
-      if (/^BEGIN:VCARD/i.test(text) || /^MECARD:/i.test(text)) {
-
-        show(
-          '<h3>👤 رمز QR يحتوي على جهة اتصال</h3>' +
-          '<pre>' + esc(text) + '</pre>',
-          'success'
-        );
-
-        return;
-      }
-
-      /* Text */
-      show(
-        '<h3>📝 رمز QR يحتوي على نص</h3>' +
-        '<div class="qr-link">' +
-        esc(text) +
-        '</div>',
-        'success'
-      );
-    }
-
-    async function readImage(file) {
-
-      show(
-        '<h3>⏳ جاري قراءة رمز QR...</h3>' +
-        '<p>انتظر لحظة...</p>',
-        'loading'
-      );
-
+    async function decodeImage(file) {
+      showMessage("⏳ جاري قراءة رمز QR...", "انتظر لحظة.", "loading");
       const ZX = window.ZXingBrowser;
-
-      if (!ZX || !ZX.BrowserQRCodeReader) {
-
-        show(
-          '<h3>❌ قارئ QR غير متاح</h3>' +
-          '<p>لم يتم تحميل مكتبة قراءة QR.</p>',
-          'error'
-        );
-
-        return;
-      }
-
-      const imageURL =
-        URL.createObjectURL(file);
-
+      if (!ZX || !ZX.BrowserQRCodeReader) { showMessage("❌ قارئ QR غير متاح", "لم يتم تحميل مكتبة قراءة QR.", "error"); return; }
+      const imageURL = URL.createObjectURL(file);
       const image = new Image();
-
       image.onload = async function () {
-
         try {
-
-          const reader =
-            new ZX.BrowserQRCodeReader();
-
-          const result =
-            await reader.decodeFromImageElement(image);
-
-          let text = '';
-
-          if (result) {
-
-            if (typeof result.getText === 'function') {
-              text = result.getText();
-            } else if (result.text) {
-              text = result.text;
-            }
-
-          }
-
-          if (!text) {
-
-            show(
-              '<h3>❌ لم يتم التعرف على QR</h3>' +
-              '<p>جرّب صورة أوضح ويكون رمز QR كاملًا ظاهرًا.</p>',
-              'error'
-            );
-
-            return;
-          }
-
-          displayQR(text);
-
-        } catch (error) {
-
-          console.error('LC QR ERROR:', error);
-
-          show(
-            '<h3>❌ تعذر قراءة رمز QR</h3>' +
-            '<p>تعذر قراءة QR. جرّب صورة أوضح.</p>',
-            'error'
-          );
-
-        } finally {
-
-          URL.revokeObjectURL(imageURL);
-
-        }
+          const reader = new ZX.BrowserQRCodeReader();
+          const decoded = await reader.decodeFromImageElement(image);
+          const text = decoded && typeof decoded.getText === "function" ? decoded.getText() : decoded && decoded.text;
+          if (!text) throw new Error("no-qr");
+          displaySpecialContent(text);
+        } catch (_) {
+          showMessage("❌ لم يتم التعرف على QR", "جرّب صورة أوضح ويكون رمز QR كاملًا ظاهرًا.", "error");
+        } finally { URL.revokeObjectURL(imageURL); }
       };
-
-      image.onerror = function () {
-
-        URL.revokeObjectURL(imageURL);
-
-        show(
-          '<h3>❌ تعذر فتح الصورة</h3>',
-          'error'
-        );
-
-      };
-
+      image.onerror = function () { URL.revokeObjectURL(imageURL); showMessage("❌ تعذر فتح الصورة", "اختر صورة QR صالحة.", "error"); };
       image.src = imageURL;
     }
 
-    button.addEventListener('click', function () {
-      input.click();
-    });
+    async function stopCamera() {
+      if (cameraControls && typeof cameraControls.stop === "function") cameraControls.stop();
+      cameraControls = null;
+      cameraRunning = false;
+      if (cameraReader && typeof cameraReader.reset === "function") cameraReader.reset();
+      cameraReader = null;
+      video.pause();
+      video.srcObject = null;
+      video.style.display = "none";
+      stopButton.style.display = "none";
+      cameraButton.style.display = "inline-flex";
+    }
 
-    input.addEventListener('change', function () {
+    async function startCamera() {
+      const ZX = window.ZXingBrowser;
+      if (!ZX || !ZX.BrowserQRCodeReader) { showMessage("❌ الكاميرا غير متاحة", "مكتبة QR غير محملة.", "error"); return; }
+      await stopCamera();
+      try {
+        cameraReader = new ZX.BrowserQRCodeReader();
+        video.style.display = "block";
+        cameraButton.style.display = "none";
+        stopButton.style.display = "inline-flex";
+        cameraRunning = true;
+        showMessage("📷 الكاميرا تعمل", "وجّه الكاميرا إلى QR. لن يتم فتح الرابط تلقائيًا.", "loading");
+        cameraControls = await cameraReader.decodeFromConstraints(
+          { video: { facingMode: { ideal: "environment" } }, audio: false },
+          video,
+          (decoded, error) => {
+            if (!cameraRunning) return;
+            if (decoded) {
+              const text = typeof decoded.getText === "function" ? decoded.getText() : decoded.text;
+              if (text) { stopCamera(); displaySpecialContent(text); }
+            } else if (error && error.name && !["NotFoundException"].includes(error.name)) {
+              console.debug("LC QR camera:", error);
+            }
+          }
+        );
+      } catch (error) {
+        await stopCamera();
+        showMessage("❌ تعذر تشغيل الكاميرا", window.CyberLinkQRScanner.qrCameraError(error), "error");
+      }
+    }
 
-      const file =
-        input.files && input.files[0];
-
-      if (!file) return;
-
-      readImage(file);
-
-      input.value = '';
-
-    });
-
-    console.log('✅ LC QR Image Reader جاهز');
+    uploadButton.addEventListener("click", () => input.click());
+    input.addEventListener("change", () => { const file = input.files && input.files[0]; if (file) decodeImage(file); input.value = ""; });
+    cameraButton.addEventListener("click", startCamera);
+    stopButton.addEventListener("click", stopCamera);
+    window.addEventListener("pagehide", stopCamera);
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initQR);
-  } else {
-    initQR();
-  }
-
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initQR);
+  else initQR();
 })();

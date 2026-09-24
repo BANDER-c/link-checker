@@ -21,11 +21,6 @@
     { name: "absher", domains: ["absher.sa"] }
   ];
 
-  if (typeof module !== "undefined" && module.exports) {
-    module.exports = TRUSTED_BRANDS;
-  }
-
-  if (typeof global !== "undefined") {
-    global.CyberLinkTrustedBrands = TRUSTED_BRANDS;
-  }
+  if (typeof module !== "undefined" && module.exports) module.exports = TRUSTED_BRANDS;
+  if (typeof global !== "undefined") global.CyberLinkTrustedBrands = TRUSTED_BRANDS;
 })(typeof window !== "undefined" ? window : globalThis);

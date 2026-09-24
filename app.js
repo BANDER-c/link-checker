@@ -1,504 +1,371 @@
-function analyzeRisk(url) {
-  try {
-    if (
-      typeof window !== "undefined" &&
-      window.CyberLinkAnalyzer &&
-      typeof window.CyberLinkAnalyzer.analyzeURL === "function"
-    ) {
-      const local = window.CyberLinkAnalyzer.analyzeURL(url);
+(function (global) {
+  "use strict";
 
-      let brandResult = null;
+  const BACKEND_URL = "https://lc-backend-7viz.onrender.com";
+  let activeScanId = 0;
 
-      if (
-        window.CyberLinkBrandDetector &&
-        typeof window.CyberLinkBrandDetector.detectBrandImpersonation === "function"
-      ) {
-        brandResult =
-          window.CyberLinkBrandDetector.detectBrandImpersonation(url);
-      }
+  function $(id) { return document.getElementById(id); }
+  function clear(node) { while (node && node.firstChild) node.removeChild(node.firstChild); }
+  function addText(parent, tag, text, className) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    node.textContent = String(text == null ? "" : text);
+    parent.appendChild(node);
+    return node;
+  }
 
-      const indicators = Array.isArray(local.indicators)
-        ? [...local.indicators]
-        : [];
-
-      if (
-        brandResult &&
-        brandResult.detected &&
-        !brandResult.official
-      ) {
-        indicators.push({
-          id: "brand-similarity",
-          title: "تشابه محتمل مع علامة معروفة",
-          description: brandResult.message,
-          weight: 25,
-          severity: "high",
-          detected: true,
-          brand: brandResult.brand,
-          similarity: brandResult.similarity
-        });
-      }
-
-      const score = Math.min(
-        indicators.reduce(
-          (total, indicator) =>
-            total + Number(indicator.weight || 0),
-          0
-        ),
-        100
-      );
-
-      const reasons = indicators.map(indicator => {
-        let text = indicator.description || indicator.title;
-
-        if (indicator.weight) {
-          text += " (+" + indicator.weight + ")";
-        }
-
-        return text;
-      });
-
-      return {
-        ...local,
-        score,
-        reasons,
-        indicators,
-        brandResult
-      };
+  function getErrorMessage(data, fallback) {
+    if (typeof data === "string" && data.trim()) return data.trim();
+    if (data && typeof data.error === "string" && data.error.trim()) return data.error.trim();
+    if (data && data.error && typeof data.error === "object") {
+      if (typeof data.error.message === "string" && data.error.message.trim()) return data.error.message.trim();
+      if (typeof data.error.code === "string" && data.error.code.trim()) return `${data.error.code}: تعذر إكمال الطلب.`;
     }
-  } catch (error) {
-    console.warn("V2 analyzer failed:", error);
+    if (data && data.message && typeof data.message === "string") return data.message.trim();
+    return fallback;
   }
 
-  // Fallback إلى المحلل القديم إذا تعذر تشغيل المحلل الجديد.
-  return {
-    score: 0,
-    reasons: ["تعذر تشغيل محرك التحليل الجديد."],
-    indicators: []
-  };
-}
+  function normalizeInput(value) {
+    let url = String(value || "").trim();
+    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+    return url;
+  }
 
-function getRiskLevel(score) {
-  if (score >= 75) {
+  function getLevelInfo(score) {
+    const level = window.CyberLinkAnalyzer.getRiskLevel(score);
     return {
-      level: "critical",
-      title: "🔴 درجة اشتباه حرجة",
-      message: "تم اكتشاف عدة مؤشرات تستحق الحذر الشديد."
+      level,
+      title: ({ low: "منخفض", medium: "متوسط", high: "مرتفع", critical: "حرج" })[level],
+      icon: ({ low: "🟢", medium: "🟡", high: "🟠", critical: "🔴" })[level]
     };
   }
 
-  if (score >= 50) {
-    return {
-      level: "high",
-      title: "🟠 درجة اشتباه مرتفعة",
-      message: "تم اكتشاف مؤشرات متعددة تستحق التحقق قبل فتح الرابط."
-    };
+  function recommendationFor(score) {
+    if (score >= 75) return "توجد مؤشرات متعددة وقوية تستحق الحذر الشديد. لا تفتح الرابط قبل التحقق من مصدره ووجهته.";
+    if (score >= 50) return "توجد عدة مؤشرات تستحق الحذر. تحقق من النطاق والمرسل والوجهة قبل المتابعة.";
+    if (score >= 25) return "توجد مؤشرات تستحق التحقق قبل فتح الرابط.";
+    return "لم يتم اكتشاف مؤشرات خطورة واضحة ضمن الفحوصات المتاحة.";
   }
 
-  if (score >= 25) {
-    return {
-      level: "medium",
-      title: "🟡 درجة اشتباه متوسطة",
-      message: "تم اكتشاف بعض المؤشرات التي تستحق المراجعة."
-    };
-  }
-
-  return {
-    level: "low",
-    title: "🟢 درجة اشتباه منخفضة",
-    message: "لم يتم اكتشاف مؤشرات محلية قوية في بنية الرابط."
-  };
-}
-
-async function analyzeURL(){
-
-  const input = document.getElementById("urlInput");
-  const result = document.getElementById("result");
-
-  let value = input.value.trim();
-
-  if(!value){
-    result.className = "result warning";
+  function renderLocalResult(url, analysis, brandResult) {
+    const result = $("result");
+    clear(result);
     result.style.display = "block";
-    result.innerHTML =
-      "<h2>⚠️ أدخل رابطًا أولًا</h2>" +
-      "<p>ضع الرابط في الخانة ثم اضغط فحص الرابط.</p>";
-    return;
+    result.className = "result " + analysis.level;
+
+    const header = document.createElement("div");
+    header.className = "result-header";
+    const info = getLevelInfo(analysis.score);
+    addText(header, "div", `${info.icon} مستوى المؤشر: ${info.title}`, "result-level");
+    addText(header, "div", "Risk Score", "result-label");
+    result.appendChild(header);
+
+    const score = document.createElement("div");
+    score.className = "score-display";
+    addText(score, "strong", `${analysis.score}/100`, "score-number");
+    addText(score, "span", "مؤشر الخطورة المحلي", "score-caption");
+    result.appendChild(score);
+
+    const barWrap = document.createElement("div");
+    barWrap.className = "risk-bar";
+    const bar = document.createElement("div");
+    bar.className = "risk-bar-fill";
+    bar.style.width = `${analysis.score}%`;
+    barWrap.appendChild(bar);
+    result.appendChild(barWrap);
+
+    addText(result, "p", recommendationFor(analysis.score), "recommendation");
+    addText(result, "p", `الرابط الذي تم تحليله: ${url}`, "analyzed-url");
+
+    const evidenceTitle = document.createElement("h3");
+    evidenceTitle.textContent = `🔎 المؤشرات المكتشفة (${analysis.indicators.length})`;
+    result.appendChild(evidenceTitle);
+
+    const list = document.createElement("div");
+    list.className = "indicator-list";
+    if (!analysis.indicators.length) {
+      const empty = document.createElement("div");
+      empty.className = "indicator-empty";
+      empty.textContent = "لا توجد مؤشرات مكتشفة في الفحوصات المحلية الحالية.";
+      list.appendChild(empty);
+    } else {
+      analysis.indicators.forEach(item => {
+        const card = document.createElement("article");
+        card.className = "indicator-card";
+        const top = document.createElement("div");
+        top.className = "indicator-top";
+        addText(top, "strong", item.name || item.title);
+        addText(top, "span", `+${item.weight} · ${item.severity}`);
+        card.appendChild(top);
+        addText(card, "p", item.description);
+        addText(card, "small", `Evidence: ${item.evidence}`);
+        list.appendChild(card);
+      });
+    }
+    result.appendChild(list);
+
+    const meta = document.createElement("div");
+    meta.className = "metadata-grid";
+    const entries = [
+      ["Protocol", analysis.metadata.protocol],
+      ["Hostname", analysis.metadata.hostname],
+      ["Subdomains", analysis.metadata.subdomainCount],
+      ["URL length", analysis.metadata.urlLength],
+      ["Hostname length", analysis.metadata.hostnameLength],
+      ["Port", analysis.metadata.port == null ? "افتراضي" : analysis.metadata.port]
+    ];
+    entries.forEach(([label, value]) => {
+      const box = document.createElement("div");
+      addText(box, "small", label);
+      addText(box, "strong", value);
+      meta.appendChild(box);
+    });
+    result.appendChild(meta);
+
+    if (brandResult && brandResult.detected && !brandResult.official) {
+      const brandBox = document.createElement("div");
+      brandBox.className = "brand-note";
+      addText(brandBox, "strong", "🧩 Brand Impersonation");
+      addText(brandBox, "p", `تشابه محتمل مع ${brandResult.brand} (${brandResult.similarity}%).`);
+      addText(brandBox, "small", "التشابه Evidence وليس حكمًا قطعيًا على التصيد.");
+      result.appendChild(brandBox);
+    }
+
+    const actions = document.createElement("div");
+    actions.className = "result-actions";
+    const externalButton = document.createElement("button");
+    externalButton.type = "button";
+    externalButton.className = "secondary-btn";
+    externalButton.id = "externalCheckBtn";
+    externalButton.textContent = "🛡️ تحقق خارجي عبر VirusTotal";
+    actions.appendChild(externalButton);
+    result.appendChild(actions);
+
+    const privacy = document.createElement("p");
+    privacy.className = "privacy-inline";
+    privacy.textContent = "لن يتم إرسال الرابط إلى VirusTotal إلا عند اختيار التحقق الخارجي.";
+    result.appendChild(privacy);
+
+    externalButton.addEventListener("click", () => runExternalScan(url, analysis, activeScanId));
   }
 
-  let testURL = value;
-
-  if(!/^https?:\/\//i.test(testURL)){
-    testURL = "https://" + testURL;
+  function renderExternalPending(message) {
+    const result = $("result");
+    const box = document.createElement("div");
+    box.className = "external-box loading";
+    addText(box, "strong", "⏳ VirusTotal");
+    addText(box, "p", message);
+    result.appendChild(box);
   }
 
-  try{
-    new URL(testURL);
-  }catch(e){
-    result.className = "result danger";
-    result.style.display = "block";
-    result.innerHTML =
-      "<h2>❌ الرابط غير صالح</h2>" +
-      "<p>تأكد من كتابة الرابط بطريقة صحيحة.</p>";
-    return;
+  function renderExternalResult(stats, analysis, scanId) {
+    if (scanId !== activeScanId) return;
+    const result = $("result");
+    const existing = result.querySelector(".external-box");
+    if (existing) existing.remove();
+
+    const malicious = Number(stats.malicious || 0);
+    const suspicious = Number(stats.suspicious || 0);
+    const harmless = Number(stats.harmless || 0);
+    const undetected = Number(stats.undetected || 0);
+    const total = malicious + suspicious + harmless + undetected;
+
+    const box = document.createElement("div");
+    box.className = "external-box";
+    addText(box, "strong", "🛡️ External Reputation");
+    addText(box, "p", `${malicious + suspicious} engines flagged · ${harmless} clean · ${undetected} undetected`);
+
+    const grid = document.createElement("div");
+    grid.className = "vt-grid";
+    [["ضار", malicious], ["مشبوه", suspicious], ["سليم", harmless], ["غير مكتشف", undetected]].forEach(([label, value]) => {
+      const item = document.createElement("div");
+      addText(item, "small", label);
+      addText(item, "strong", value);
+      grid.appendChild(item);
+    });
+    box.appendChild(grid);
+
+    const assessment = malicious > 0
+      ? "تم العثور على مؤشرات خارجية ضارة من بعض المحركات؛ تعامل مع الرابط بحذر شديد."
+      : suspicious > 0
+        ? "تم العثور على مؤشرات خارجية مشبوهة؛ يلزم التحقق من المصدر والوجهة."
+        : "لم يتم اكتشاف مؤشرات ضارة واضحة من النتائج الخارجية المتاحة.";
+    addText(box, "p", `Final Assessment: ${assessment}`);
+    addText(box, "small", `إجمالي المحركات التي أعادت إحصاءات: ${total}. نتائج VirusTotal خدمة خارجية وليست ضمانًا مطلقًا.`);
+    result.appendChild(box);
   }
 
-  // رقم فحص جديد لمنع نتيجة فحص قديم من تغيير الشاشة
-  const scanId = Date.now() + Math.random();
-  window.LCScanId = scanId;
+  async function runExternalScan(url, localAnalysis, scanId) {
+    const button = $("externalCheckBtn");
 
-  // التحليل المحلي يظهر فورًا
-  const localRisk = analyzeRisk(testURL);
-  const localLevel = getRiskLevel(localRisk.score);
+    // إرسال النسخة القياسية من الرابط فقط، بدون فتحه.
+    let canonicalUrl;
+    try {
+      canonicalUrl = new URL(String(url || "").trim()).href;
+    } catch (_) {
+      const result = $("result");
+      const box = document.createElement("div");
+      box.className = "external-box error";
+      addText(box, "strong", "ℹ️ التحقق الخارجي غير مكتمل");
+      addText(box, "p", "تعذر تجهيز الرابط بصيغة URL صحيحة قبل إرساله إلى VirusTotal.");
+      result.appendChild(box);
+      return;
+    }
+    if (button) { button.disabled = true; button.textContent = "⏳ جاري التحقق الخارجي..."; }
+    renderExternalPending("سيتم إرسال الرابط إلى Backend المشروع ثم إلى VirusTotal. لم يتم فتح الرابط في المتصفح.");
 
-  const localReasons =
-    localRisk.reasons.length
-      ? localRisk.reasons
-          .map(reason => "<li>" + reason + "</li>")
-          .join("")
-      : "<li>لا توجد مؤشرات محلية واضحة.</li>";
-
-  result.className =
-    "result " + localLevel.level;
-
-  result.style.display = "block";
-
-  result.innerHTML =
-    "<h2>" +
-    (localRisk.score >= 40
-      ? "🟡 توجد مؤشرات تستحق الحذر"
-      : "🟢 التحليل المحلي مكتمل") +
-    "</h2>" +
-
-    "<p>تم تحليل خصائص الرابط بسرعة، ويجري الآن فحص VirusTotal في الخلفية.</p>" +
-
-    "<div style='font-size:32px;font-weight:bold;margin:15px 0'>" +
-    localRisk.score +
-    "/100" +
-    "</div>" +
-
-    "<p><b>مستوى الخطورة: " +
-    localLevel.title +
-    "</b></p>" +
-
-    "<hr>" +
-
-    "<h3>🔎 أسباب درجة الخطورة</h3>" +
-
-    "<ul>" +
-    localReasons +
-    "</ul>" +
-
-    "<p style='font-size:13px;opacity:.8'>" +
-    "⏳ يتم تحديث النتيجة تلقائيًا عند وصول نتيجة VirusTotal." +
-    "</p>";
-
-  // فحص VirusTotal في الخلفية بدون تعطيل النتيجة المحلية
-  (async function(){
-
-    try{
-
+    try {
       const controller = new AbortController();
-
-      const timeout = setTimeout(() => {
-        controller.abort();
-      }, 60000);
-
-      const response = await fetch(
-        "https://lc-backend-7viz.onrender.com/scan",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            url: testURL
-          }),
-          signal: controller.signal
-        }
-      );
-
+      const timeout = setTimeout(() => controller.abort(), 90000);
+      const response = await fetch(`${BACKEND_URL}/scan`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: canonicalUrl }),
+        signal: controller.signal
+      });
       clearTimeout(timeout);
-
       const data = await response.json();
-
-      if(!response.ok){
-        throw new Error(
-          data.error || "فشل إرسال الرابط للفحص"
-        );
+      if (!response.ok) throw new Error(getErrorMessage(data, "تعذر بدء الفحص الخارجي."));
+      // قد يعيد الـ Backend سجل URL موجودًا مسبقًا بدل إنشاء تحليل جديد.
+      const directStats = data && data.data && data.data.attributes && data.data.attributes.last_analysis_stats;
+      if (directStats) {
+        renderExternalResult(directStats, localAnalysis, scanId);
+        if (button) { button.disabled = false; button.textContent = "🔄 إعادة التحقق الخارجي"; }
+        return;
       }
+      const analysisId = data && data.data && data.data.id;
+      if (!analysisId) throw new Error("لم يتم الحصول على رقم التحليل الخارجي.");
 
-      const analysisId =
-        data.data && data.data.id;
-
-      if(!analysisId){
-        throw new Error("لم يتم الحصول على رقم التحليل");
-      }
-
-      let analysis = null;
-
-      // الانتظار في الخلفية
-      for(let i = 0; i < 90; i++){
-
-        await new Promise(resolve =>
-          setTimeout(resolve, 1000)
-        );
-
-        if(window.LCScanId !== scanId){
+      // فحص سريع ثم polling خفيف. لا نجعل المستخدم ينتظر حتى نهاية المهلة؛
+      // إذا تأخر VirusTotal نُبقي النتيجة المحلية متاحة ونواصل المحاولة في الخلفية.
+      const delays = [0, 500, 700, 900, 1200, 1500, 2000, 2500, 3000];
+      let completed = false;
+      for (let i = 0; i < delays.length; i++) {
+        if (delays[i]) await new Promise(resolve => setTimeout(resolve, delays[i]));
+        if (scanId !== activeScanId) return;
+        const check = await fetch(`${BACKEND_URL}/scan/${encodeURIComponent(analysisId)}`);
+        const checkData = await check.json();
+        if (!check.ok) throw new Error(getErrorMessage(checkData, "تعذر الحصول على نتيجة VirusTotal."));
+        const analysis = checkData && checkData.data;
+        if (analysis && analysis.attributes && analysis.attributes.status === "completed") {
+          renderExternalResult(analysis.attributes.stats || {}, localAnalysis, scanId);
+          completed = true;
+          if (button) { button.disabled = false; button.textContent = "🔄 إعادة التحقق الخارجي"; }
           return;
         }
+      }
 
-        const check = await fetch(
-          "https://lc-backend-7viz.onrender.com/scan/" +
-          encodeURIComponent(analysisId)
-        );
+      // لا نعتبر التحليل فاشلًا بعد 12.8 ثانية. نحرر الواجهة ونواصل الاستعلام
+      // في الخلفية لمدة تصل إلى دقيقة، مع تحديث النتيجة فور اكتمال VirusTotal.
+      const pendingBox = $("result").querySelector(".external-box");
+      if (pendingBox) pendingBox.remove();
+      renderExternalPending("جارٍ تجهيز نتيجة VirusTotal في الخلفية. يمكنك متابعة النتيجة المحلية دون انتظار.");
+      if (button) { button.disabled = false; button.textContent = "🔄 إعادة التحقق عبر VirusTotal"; }
 
+      const backgroundDelays = [4000, 5000, 6000, 7000, 8000, 9000, 10000];
+      for (const delay of backgroundDelays) {
+        await new Promise(resolve => setTimeout(resolve, delay));
+        if (scanId !== activeScanId) return;
+        const check = await fetch(`${BACKEND_URL}/scan/${encodeURIComponent(analysisId)}`);
         const checkData = await check.json();
-
-        if(!check.ok){
-          throw new Error(
-            checkData.error ||
-            "تعذر الحصول على نتيجة التحليل"
-          );
-        }
-
-        analysis = checkData.data;
-
-        if(
-          analysis &&
-          analysis.attributes &&
-          analysis.attributes.status === "completed"
-        ){
-          break;
+        if (!check.ok) return;
+        const analysis = checkData && checkData.data;
+        if (analysis && analysis.attributes && analysis.attributes.status === "completed") {
+          renderExternalResult(analysis.attributes.stats || {}, localAnalysis, scanId);
+          return;
         }
       }
+      return;
+    } catch (error) {
+      if (scanId !== activeScanId) return;
+      const existing = $("result").querySelector(".external-box");
+      if (existing) existing.remove();
+      const box = document.createElement("div");
+      box.className = "external-box error";
+      addText(box, "strong", "ℹ️ التحقق الخارجي غير مكتمل");
+      const message = error.name === "AbortError"
+        ? "انتهت مهلة الاتصال بخدمة الفحص الخارجي بعد 90 ثانية. قد يكون التحليل الخارجي ما زال قيد المعالجة."
+        : (String(error.message || "").toLowerCase().includes("unable to canonicalize url")
+          ? "VirusTotal لم يتمكن من تحويل هذا الرابط إلى صيغة قابلة للتحليل. قد يحدث ذلك مع بعض الروابط غير الصالحة أو غير القابلة للمعالجة خارجيًا."
+          : getErrorMessage(error, "تعذر إكمال التحقق الخارجي حاليًا."));
+      addText(box, "p", message);
+      addText(box, "small", "نتيجة التحليل المحلي ما زالت صالحة للعرض ولا تعتمد على توفر VirusTotal.");
+      $("result").appendChild(box);
+      if (button) { button.disabled = false; button.textContent = "🛡️ إعادة التحقق عبر VirusTotal"; }
+    }
+  }
 
-      // إذا لم تكتمل VT خلال فترة الانتظار، نُبقي النتيجة المحلية
-      // ونوضح أن الفحص الخارجي ما زال غير مكتمل بدل اعتباره فشلًا.
-      if(
-        !analysis ||
-        !analysis.attributes ||
-        analysis.attributes.status !== "completed"
-      ){
-        if(window.LCScanId === scanId){
-          result.innerHTML +=
-            "<p style='font-size:13px;opacity:.8'>" +
-            "ℹ️ لم تكتمل نتيجة VirusTotal بعد. نتيجة التحليل المحلي ما زالت معروضة." +
-            "</p>";
-        }
-        return;
-      }
-
-      if(window.LCScanId !== scanId){
-        return;
-      }
-
-      const stats =
-        analysis.attributes.stats || {};
-
-      const malicious =
-        Number(stats.malicious || 0);
-
-      const suspicious =
-        Number(stats.suspicious || 0);
-
-      const harmless =
-        Number(stats.harmless || 0);
-
-      const undetected =
-        Number(stats.undetected || 0);
-
-      const detections =
-        malicious + suspicious;
-
-      const total =
-        malicious +
-        suspicious +
-        harmless +
-        undetected;
-
-      const finalReasons = [...localRisk.reasons];
-
-      const localScore = Math.min(
-        100,
-        Math.max(0, Number(localRisk.score) || 0)
-      );
-
-      const localLevel = getRiskLevel(localScore);
-
-      let externalLevel = "غير متاح";
-      let externalScore = 0;
-
-      if (malicious > 0) {
-        externalLevel = "ضار";
-        externalScore = Math.min(
-          100,
-          60 + Math.min(malicious - 1, 4) * 10 +
-          Math.min(suspicious, 4) * 5
-        );
-
-        finalReasons.push(
-          "VirusTotal اكتشف مؤشرات ضارة"
-        );
-
-      } else if (suspicious > 0) {
-        externalLevel = "مشبوه";
-        externalScore = Math.min(
-          70,
-          30 + Math.min(suspicious - 1, 4) * 8
-        );
-
-        finalReasons.push(
-          "VirusTotal اكتشف مؤشرات مشبوهة"
-        );
-
-      } else if (harmless > 0 || undetected > 0) {
-        externalLevel = "لم تُكتشف مؤشرات ضارة";
-        externalScore = 0;
-      }
-
-      /*
-       * Final Risk Assessment
-       * الدمج النهائي بين:
-       * - التحليل المحلي: 60%
-       * - نتيجة السمعة الخارجية من VirusTotal: 40%
-       *
-       * لا نستخدم Math.max(localScore, externalScore)
-       * كطريقة الدمج الأساسية حتى لا تقفز النتيجة بشكل مبالغ فيه.
-       */
-      let finalRiskScore;
-
-      if (externalScore > 0) {
-        finalRiskScore =
-          (localScore * 0.60) +
-          (externalScore * 0.40);
-      } else {
-        // عند عدم وجود نتيجة خارجية، نعتمد على التحليل المحلي بالكامل.
-        finalRiskScore = localScore;
-      }
-
-      /*
-       * وجود 3 اكتشافات ضارة أو أكثر من VirusTotal
-       * يعتبر دليلًا خارجيًا قويًا، لذلك لا نسمح
-       * بأن تبقى النتيجة تحت مستوى High.
-       */
-      if (malicious >= 3) {
-        finalRiskScore = Math.max(50, finalRiskScore);
-      }
-
-      finalRiskScore = Math.round(
-        Math.max(0, Math.min(100, finalRiskScore))
-      );
-
-      const finalLevel = getRiskLevel(finalRiskScore);
-
-      const riskScore = finalRiskScore;
-      const level = finalLevel;
-
-      let title;
-      let message;
-
-      if(riskScore >= 75){
-
-        title = "🔴 الرابط قد يكون خطيرًا";
-
-        message =
-          "درجة الخطورة النهائية مرتفعة وتستحق الحذر.";
-
-      }else if(riskScore >= 50){
-
-        title = "🟠 توجد مؤشرات خطورة مرتفعة";
-
-        message =
-          "درجة الخطورة النهائية مرتفعة وتوجد مؤشرات تستحق الحذر.";
-
-      }else if(riskScore >= 25){
-
-        title = "🟡 توجد مؤشرات تستحق الحذر";
-
-        message =
-          "درجة الخطورة النهائية متوسطة وتوجد مؤشرات تستحق الانتباه.";
-
-      }else{
-
-        title = "🟢 لم يتم اكتشاف تهديد";
-
-        message =
-          "لم تكتشف محركات الفحص المتاحة مؤشرات ضارة، ودرجة المؤشرات المحلية منخفضة.";
-
-      }
-
-      const reasonText =
-        finalReasons.length
-          ? finalReasons
-              .map(reason => "<li>" + reason + "</li>")
-              .join("")
-          : "<li>لا توجد مؤشرات واضحة.</li>";
-
-      result.className =
-        "result " + level.level;
-
-      result.innerHTML =
-        "<h2>" + title + "</h2>" +
-        "<p>" + message + "</p>" +
-
-        "<div style='font-size:32px;font-weight:bold;margin:15px 0'>" +
-        riskScore +
-        "/100" +
-        "</div>" +
-
-        "<p><b>مستوى الخطورة النهائي: " +
-        level.title +
-        "</b></p>" +
-
-        "<p><b>درجة التحليل المحلي: " +
-        localScore +
-        "/100</b></p>" +
-
-        "<p><b>نتيجة VirusTotal الخارجية: " +
-        externalLevel +
-        "</b></p>" +
-
-        "<p><b>الاكتشافات: " +
-        detections +
-        " من " +
-        total +
-        "</b></p>" +
-
-        "<p>ضار: " +
-        malicious +
-        " | مشبوه: " +
-        suspicious +
-        " | سليم: " +
-        harmless +
-        " | غير مكتشف: " +
-        undetected +
-        "</p>" +
-
-        "<hr>" +
-
-        "<h3>🔎 أسباب درجة الخطورة</h3>" +
-
-        "<ul>" +
-        reasonText +
-        "</ul>" +
-
-        "<p style='font-size:13px;opacity:.8'>" +
-        "درجة الخطورة تقديرية وتعتمد على مؤشرات الرابط ونتائج VirusTotal، ولا تُعد حكمًا نهائيًا على أمان الرابط." +
-        "</p>";
-
-    }catch(error){
-
-      // لا نحذف النتيجة المحلية إذا تأخر أو تعذر VirusTotal
-      if(window.LCScanId !== scanId){
-        return;
-      }
-
-      result.innerHTML +=
-        "<p style='font-size:13px;opacity:.8'>" +
-        "ℹ️ تعذر الاتصال بخدمة VirusTotal حاليًا. نتيجة التحليل المحلي ما زالت ظاهرة." +
-        "</p>";
+  function analyzeURL() {
+    const input = $("urlInput");
+    const result = $("result");
+    if (!input || !result) return;
+    const value = input.value.trim();
+    if (!value) {
+      clear(result);
+      result.style.display = "block";
+      result.className = "result warning";
+      addText(result, "h2", "⚠️ أدخل رابطًا أولًا");
+      addText(result, "p", "ضع الرابط في الخانة ثم اضغط فحص الرابط.");
+      return;
     }
 
-  })();
+    const url = normalizeInput(value);
+    const analysis = window.CyberLinkAnalyzer.analyzeURL(url);
+    if (!analysis.valid) {
+      clear(result);
+      result.style.display = "block";
+      result.className = "result danger";
+      addText(result, "h2", "❌ الرابط غير صالح");
+      addText(result, "p", analysis.error || "تعذر تحليل الرابط.");
+      return;
+    }
 
-}
+    activeScanId += 1;
+    const scanId = activeScanId;
+    const brandResult = window.CyberLinkBrandDetector
+      ? window.CyberLinkBrandDetector.detectBrandImpersonation(url)
+      : null;
+
+    if (brandResult && brandResult.detected && !brandResult.official) {
+      const brandIndicator = {
+        id: "brand-similarity",
+        name: "تشابه محتمل مع علامة معروفة",
+        title: "تشابه محتمل مع علامة معروفة",
+        description: brandResult.message,
+        detected: true,
+        weight: 22,
+        severity: "medium",
+        evidence: `brand=${brandResult.brand}; similarity=${brandResult.similarity}%`
+      };
+      analysis.indicators = [...analysis.indicators, brandIndicator];
+      analysis.score = Math.min(100, analysis.indicators.reduce((sum, item) => sum + Number(item.weight || 0), 0));
+      analysis.level = window.CyberLinkAnalyzer.getRiskLevel(analysis.score);
+    }
+
+    renderLocalResult(url, analysis, brandResult);
+    window.LC_LAST_ANALYSIS = { url, analysis, brandResult };
+  }
+
+  function initTheme() {
+    const button = $("themeBtn");
+    if (!button) return;
+    const saved = localStorage.getItem("lc-theme");
+    if (saved === "dark") document.body.classList.add("dark");
+    button.textContent = document.body.classList.contains("dark") ? "☀️" : "🌙";
+    button.addEventListener("click", () => {
+      document.body.classList.toggle("dark");
+      const dark = document.body.classList.contains("dark");
+      button.textContent = dark ? "☀️" : "🌙";
+      localStorage.setItem("lc-theme", dark ? "dark" : "light");
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initTheme();
+    const input = $("urlInput");
+    if (input) input.addEventListener("keydown", e => { if (e.key === "Enter") analyzeURL(); });
+  });
+
+  global.analyzeURL = analyzeURL;
+  global.CyberLinkApp = { analyzeURL, runExternalScan };
+})(window);

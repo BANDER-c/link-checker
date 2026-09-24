@@ -1,23 +1,26 @@
 {
   "name": "link-checker",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "version": "2.1.0",
+  "description": "Cyber Link Analyzer - educational URL risk analysis tool",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node lc-check.js",
+    "test:metrics": "node lc-check.js --metrics",
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/BANDER-c/link-checker.git"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "cybersecurity",
+    "url-analysis",
+    "phishing",
+    "qr"
+  ],
+  "author": "Cyber Link Analyzer Team",
   "license": "ISC",
   "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/BANDER-c/link-checker/issues"
-  },
-  "homepage": "https://github.com/BANDER-c/link-checker#readme",
   "dependencies": {
     "cors": "^2.8.6",
     "express": "^5.2.1"
