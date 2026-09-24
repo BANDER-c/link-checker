@@ -15,7 +15,18 @@ const extra = [
   ['official Google', brandDetector.detectBrandImpersonation('https://www.google.com/login').official],
   ['Google typo', brandDetector.detectBrandImpersonation('https://goog1e.com/login').detected],
   ['QR URL extraction', qr.processQRContent('https://example.com').type === 'url'],
-  ['QR text extraction', qr.processQRContent('hello world').type === 'text']
+  ['QR text extraction', qr.processQRContent('hello world').type === 'text'],
+  ['Risk 24 is low', analyzer.getRiskLevel(24) === 'low'],
+  ['Risk 25 is medium', analyzer.getRiskLevel(25) === 'medium'],
+  ['Risk 49 is medium', analyzer.getRiskLevel(49) === 'medium'],
+  ['Risk 50 is high', analyzer.getRiskLevel(50) === 'high'],
+  ['Risk 74 is high', analyzer.getRiskLevel(74) === 'high'],
+  ['Risk 75 is critical', analyzer.getRiskLevel(75) === 'critical'],
+  ['Safe login is not brand phishing', suite.classifyResult(analyzer.analyzeURL('https://example.com/login'), brandDetector.detectBrandImpersonation('https://example.com/login')) === 'safe'],
+  ['Short URL is evidence', analyzer.analyzeURL('https://bit.ly/example').metadata.shortener === true],
+  ['Redirect parameter is evidence', analyzer.analyzeURL('https://example.com/?redirect=https://example.com').metadata.redirectParameters.includes('redirect')],
+  ['Brand in subdomain is not impersonation', brandDetector.detectBrandImpersonation('https://google.example.com').detected === false],
+  ['Brand typo needs context in classifier', suite.classifyResult(analyzer.analyzeURL('https://goog1e.example'), brandDetector.detectBrandImpersonation('https://goog1e.example')) !== 'phishing']
 ];
 extra.forEach(([name, ok]) => assert(ok, `فشل اختبار: ${name}`));
 

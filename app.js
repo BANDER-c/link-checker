@@ -195,102 +195,118 @@
     result.appendChild(box);
   }
 
+  async function fetchJSON(url, options = {}, timeoutMs = 8000) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(url, { ...options, signal: controller.signal });
+      const data = await response.json().catch(() => ({}));
+      return { response, data };
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  function renderExternalIncomplete(message) {
+    const result = $("result");
+    const existing = result.querySelector(".external-box");
+    if (existing) existing.remove();
+    const box = document.createElement("div");
+    box.className = "external-box error";
+    addText(box, "strong", "ℹ️ التحقق الخارجي غير مكتمل");
+    addText(box, "p", message);
+    addText(box, "small", "نتيجة التحليل المحلي ما زالت صالحة للعرض ولا تعتمد على توفر VirusTotal.");
+    result.appendChild(box);
+  }
+
   async function runExternalScan(url, localAnalysis, scanId) {
     const button = $("externalCheckBtn");
-
-    // إرسال النسخة القياسية من الرابط فقط، بدون فتحه.
     let canonicalUrl;
     try {
-      canonicalUrl = new URL(String(url || "").trim()).href;
+      const parsed = new URL(String(url || "").trim());
+      if (!["http:", "https:"].includes(parsed.protocol)) throw new Error("unsupported-protocol");
+      if (parsed.username || parsed.password) {
+        renderExternalIncomplete("لن يتم إرسال رابط يحتوي على بيانات userinfo إلى الخدمة الخارجية حفاظًا على الخصوصية. التحليل المحلي متاح دون إرسال الرابط.");
+        return;
+      }
+      canonicalUrl = parsed.href;
     } catch (_) {
-      const result = $("result");
-      const box = document.createElement("div");
-      box.className = "external-box error";
-      addText(box, "strong", "ℹ️ التحقق الخارجي غير مكتمل");
-      addText(box, "p", "تعذر تجهيز الرابط بصيغة URL صحيحة قبل إرساله إلى VirusTotal.");
-      result.appendChild(box);
+      renderExternalIncomplete("تعذر تجهيز الرابط بصيغة HTTP/HTTPS صحيحة قبل إرساله إلى VirusTotal.");
       return;
     }
-    if (button) { button.disabled = true; button.textContent = "⏳ جاري التحقق الخارجي..."; }
+
+    if (button) { button.disabled = true; button.textContent = "⏳ جاري بدء التحقق الخارجي..."; }
     renderExternalPending("سيتم إرسال الرابط إلى Backend المشروع ثم إلى VirusTotal. لم يتم فتح الرابط في المتصفح.");
 
     try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 90000);
-      const response = await fetch(`${BACKEND_URL}/scan`, {
+      // The external request is deliberately bounded. Local analysis never waits
+      // for this request, and a slow VT service cannot keep the page stuck.
+      const started = await fetchJSON(`${BACKEND_URL}/scan`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: canonicalUrl }),
-        signal: controller.signal
-      });
-      clearTimeout(timeout);
-      const data = await response.json();
-      if (!response.ok) throw new Error(getErrorMessage(data, "تعذر بدء الفحص الخارجي."));
-      // قد يعيد الـ Backend سجل URL موجودًا مسبقًا بدل إنشاء تحليل جديد.
-      const directStats = data && data.data && data.data.attributes && data.data.attributes.last_analysis_stats;
+        body: JSON.stringify({ url: canonicalUrl })
+      }, 15000);
+
+      if (!started.response.ok) throw new Error(getErrorMessage(started.data, "تعذر بدء الفحص الخارجي."));
+
+      const directStats = started.data && started.data.data && started.data.data.attributes && started.data.data.attributes.last_analysis_stats;
       if (directStats) {
         renderExternalResult(directStats, localAnalysis, scanId);
         if (button) { button.disabled = false; button.textContent = "🔄 إعادة التحقق الخارجي"; }
         return;
       }
-      const analysisId = data && data.data && data.data.id;
+
+      const analysisId = started.data && started.data.data && started.data.data.id;
       if (!analysisId) throw new Error("لم يتم الحصول على رقم التحليل الخارجي.");
 
-      // فحص سريع ثم polling خفيف. لا نجعل المستخدم ينتظر حتى نهاية المهلة؛
-      // إذا تأخر VirusTotal نُبقي النتيجة المحلية متاحة ونواصل المحاولة في الخلفية.
-      const delays = [0, 500, 700, 900, 1200, 1500, 2000, 2500, 3000];
-      let completed = false;
-      for (let i = 0; i < delays.length; i++) {
-        if (delays[i]) await new Promise(resolve => setTimeout(resolve, delays[i]));
+      const quickDelays = [0, 600, 1000, 1500, 2200, 3000];
+      for (const delay of quickDelays) {
+        if (delay) await new Promise(resolve => setTimeout(resolve, delay));
         if (scanId !== activeScanId) return;
-        const check = await fetch(`${BACKEND_URL}/scan/${encodeURIComponent(analysisId)}`);
-        const checkData = await check.json();
-        if (!check.ok) throw new Error(getErrorMessage(checkData, "تعذر الحصول على نتيجة VirusTotal."));
-        const analysis = checkData && checkData.data;
-        if (analysis && analysis.attributes && analysis.attributes.status === "completed") {
-          renderExternalResult(analysis.attributes.stats || {}, localAnalysis, scanId);
-          completed = true;
-          if (button) { button.disabled = false; button.textContent = "🔄 إعادة التحقق الخارجي"; }
-          return;
+        try {
+          const check = await fetchJSON(`${BACKEND_URL}/scan/${encodeURIComponent(analysisId)}`, {}, 6000);
+          if (!check.response.ok) throw new Error(getErrorMessage(check.data, "تعذر الحصول على نتيجة VirusTotal."));
+          const analysis = check.data && check.data.data;
+          if (analysis && analysis.attributes && analysis.attributes.status === "completed") {
+            renderExternalResult(analysis.attributes.stats || {}, localAnalysis, scanId);
+            if (button) { button.disabled = false; button.textContent = "🔄 إعادة التحقق الخارجي"; }
+            return;
+          }
+        } catch (pollError) {
+          // A transient polling failure should not hide the already-rendered local result.
+          if (delay === quickDelays[quickDelays.length - 1]) throw pollError;
         }
       }
 
-      // لا نعتبر التحليل فاشلًا بعد 12.8 ثانية. نحرر الواجهة ونواصل الاستعلام
-      // في الخلفية لمدة تصل إلى دقيقة، مع تحديث النتيجة فور اكتمال VirusTotal.
-      const pendingBox = $("result").querySelector(".external-box");
-      if (pendingBox) pendingBox.remove();
-      renderExternalPending("جارٍ تجهيز نتيجة VirusTotal في الخلفية. يمكنك متابعة النتيجة المحلية دون انتظار.");
-      if (button) { button.disabled = false; button.textContent = "🔄 إعادة التحقق عبر VirusTotal"; }
+      renderExternalPending("التحليل الخارجي ما زال قيد المعالجة. يمكنك متابعة النتيجة المحلية، وستستطيع إعادة التحقق لاحقًا.");
+      if (button) { button.disabled = false; button.textContent = "🔄 إعادة التحقق الخارجي"; }
 
-      const backgroundDelays = [4000, 5000, 6000, 7000, 8000, 9000, 10000];
+      // Continue in the background, but never leave an endless loading state.
+      const backgroundDelays = [5000, 7000, 9000, 11000];
       for (const delay of backgroundDelays) {
         await new Promise(resolve => setTimeout(resolve, delay));
         if (scanId !== activeScanId) return;
-        const check = await fetch(`${BACKEND_URL}/scan/${encodeURIComponent(analysisId)}`);
-        const checkData = await check.json();
-        if (!check.ok) return;
-        const analysis = checkData && checkData.data;
-        if (analysis && analysis.attributes && analysis.attributes.status === "completed") {
-          renderExternalResult(analysis.attributes.stats || {}, localAnalysis, scanId);
-          return;
+        try {
+          const check = await fetchJSON(`${BACKEND_URL}/scan/${encodeURIComponent(analysisId)}`, {}, 6000);
+          if (!check.response.ok) break;
+          const analysis = check.data && check.data.data;
+          if (analysis && analysis.attributes && analysis.attributes.status === "completed") {
+            renderExternalResult(analysis.attributes.stats || {}, localAnalysis, scanId);
+            return;
+          }
+        } catch (_) {
+          // Keep local analysis usable; retry is available to the user.
         }
       }
-      return;
+      renderExternalIncomplete("لم تكتمل نتيجة VirusTotal ضمن فترة الانتظار. يمكنك إعادة التحقق دون التأثير على التحليل المحلي.");
     } catch (error) {
       if (scanId !== activeScanId) return;
-      const existing = $("result").querySelector(".external-box");
-      if (existing) existing.remove();
-      const box = document.createElement("div");
-      box.className = "external-box error";
-      addText(box, "strong", "ℹ️ التحقق الخارجي غير مكتمل");
       const message = error.name === "AbortError"
-        ? "انتهت مهلة الاتصال بخدمة الفحص الخارجي بعد 90 ثانية. قد يكون التحليل الخارجي ما زال قيد المعالجة."
+        ? "انتهت مهلة الاتصال بالخدمة الخارجية. يمكنك إعادة المحاولة لاحقًا؛ نتيجة التحليل المحلي لا تتأثر."
         : (String(error.message || "").toLowerCase().includes("unable to canonicalize url")
-          ? "VirusTotal لم يتمكن من تحويل هذا الرابط إلى صيغة قابلة للتحليل. قد يحدث ذلك مع بعض الروابط غير الصالحة أو غير القابلة للمعالجة خارجيًا."
+          ? "VirusTotal لم يتمكن من تحويل هذا الرابط إلى صيغة قابلة للتحليل. قد يحدث ذلك مع بعض الروابط غير القابلة للمعالجة خارجيًا."
           : getErrorMessage(error, "تعذر إكمال التحقق الخارجي حاليًا."));
-      addText(box, "p", message);
-      addText(box, "small", "نتيجة التحليل المحلي ما زالت صالحة للعرض ولا تعتمد على توفر VirusTotal.");
-      $("result").appendChild(box);
+      renderExternalIncomplete(message);
       if (button) { button.disabled = false; button.textContent = "🛡️ إعادة التحقق عبر VirusTotal"; }
     }
   }

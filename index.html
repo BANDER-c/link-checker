@@ -104,7 +104,7 @@
         <div class="notice"><strong>التحليل المحلي:</strong> يتم داخل المتصفح اعتمادًا على خصائص URL، ولا يحتاج إلى فتح الصفحة المستهدفة.</div>
         <div class="notice"><strong>VirusTotal:</strong> خدمة خارجية اختيارية. عند الضغط على «تحقق خارجي عبر VirusTotal» يتم إرسال الرابط إلى Backend المشروع ثم إلى VirusTotal للتحقق من السمعة.</div>
         <div class="notice"><strong>عدم فتح الروابط:</strong> LC لا يفتح الرابط الذي يتم تحليله تلقائيًا، بما في ذلك الروابط المستخرجة من QR.</div>
-        <div class="notice"><strong>بيانات الاعتماد:</strong> لا ينبغي إدخال كلمات مرور حقيقية في أداة التحليل. إذا احتوى الرابط الذي تحلله على userinfo، يعرض LC وجودها دون عرض كلمة المرور في Evidence.</div>
+        <div class="notice"><strong>بيانات الاعتماد:</strong> LC لا يطلب أو يجمع كلمات مرور المستخدمين. إذا احتوى الرابط على userinfo، يعرض LC وجودها دون عرض كلمة المرور في Evidence، ولا يرسل هذا الرابط للتحقق الخارجي.</div>
         <div class="notice"><strong>المفتاح السري:</strong> مفتاح VirusTotal لا يوجد في JavaScript الخاص بواجهة GitHub Pages؛ يجب حفظه في متغير بيئة داخل Backend.</div>
       </div>
     </section>
